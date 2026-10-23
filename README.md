@@ -1,13 +1,13 @@
-# The Petrichor · Kakamega
+# Petrichor House · Kakamega
 
-A five-star hotel website inspired by Petrichor House Kakamega (Shiyunzu, Kakamega County, Kenya).
+A website for Petrichor House Kakamega, a boutique guest house in Shiyunzu on the Kakamega–Mumias Road, about 3 km from Kakamega town. It has garden-view studios on bed & breakfast, a restaurant and pizzeria, and an outdoor bar.
 
 **Guests can:**
-- Browse four room types, from Garden Deluxe to the Isukha Presidential Villa
+- Browse the garden-view studios (self-contained, breakfast included)
 - See a live 14-day availability grid of open nights and book a room (the system assigns a free room and refuses double bookings)
-- Reserve a table at Mvua restaurant, picking from open seating times for their party size
-- Read the full menu with prices in KES
-- Order food delivery to their room (free) or a Kakamega address (KES 250 fee) on runs that leave every 3 hours: 06:00, 09:00, 12:00, 15:00, 18:00, 21:00
+- Reserve a table in the dining hall, garden terrace or outdoor bar, picking from open seating times for their party size
+- Read the full menu (breakfast, pizzeria, Kenyan mains, drinks) with prices in KES
+- Order food delivery to their room (free) or a Kakamega address (KES 200 fee) on runs that leave every 3 hours: 09:00, 12:00, 15:00, 18:00, 21:00
 - Look up a booking or delivery by reference
 
 **Staff (at `/admin`) can:**
@@ -42,6 +42,14 @@ Settings come from environment variables:
 - `DATA_DIR`: where `db.json` is stored (default `./data`)
 
 All times use Kenya time (EAT, UTC+3).
+
+## Adding real photos
+
+Put photos in `public/photos/` with these names and they appear on the site automatically, with no code changes:
+`exterior.jpg` (also used behind the homepage heading), `studio.jpg`, `dining.jpg`, `bar.jpg`, `garden.jpg`, `pizza.jpg`.
+Until then the site uses drawn artwork.
+
+Room count, nightly rate and menu prices are placeholders. Change them in the staff dashboard.
 
 ## How it is built
 

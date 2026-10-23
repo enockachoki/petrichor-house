@@ -1,4 +1,4 @@
-// The Petrichor: hotel website + booking API.
+// Petrichor House Kakamega: hotel website + booking API.
 // Zero dependencies: needs only Node.js 18 or newer. Data lives in data/db.json.
 
 const http = require('http');
@@ -419,14 +419,20 @@ async function api(req, res, url) {
   // ----- public -----
   if (method === 'GET' && p === '/api/hotel')
     return send(res, 200, {
-      name: 'The Petrichor',
-      location: 'Shiyunzu, Kakamega, Kenya',
+      name: 'Petrichor House Kakamega',
+      location: 'Shiyunzu, Kakamega–Mumias Road, Kakamega, Kenya',
       checkIn: '14:00',
       checkOut: '10:30',
       today: nairobiNow().date,
       delivery: db.deliveryConfig,
       dining: db.diningConfig,
     });
+  if (method === 'GET' && p === '/api/photos') {
+    // Real photos dropped into public/photos/ (exterior.jpg, studio.jpg, ...), keyed by name.
+    const dir = path.join(PUBLIC_DIR, 'photos');
+    const files = fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => /\.(jpe?g|png|webp)$/i.test(f)) : [];
+    return send(res, 200, Object.fromEntries(files.map((f) => [f.replace(/\.[^.]+$/, '').toLowerCase(), `/photos/${encodeURIComponent(f)}`])));
+  }
   if (method === 'GET' && p === '/api/room-types')
     return send(res, 200, db.roomTypes.map((t) => ({ ...t, rooms: db.rooms.filter((r) => r.typeId === t.id && r.status === 'active').length })));
   if (method === 'GET' && p === '/api/availability/calendar') {
@@ -585,7 +591,7 @@ const server = http.createServer(async (req, res) => {
 
 if (require.main === module) {
   server.listen(PORT, () => {
-    console.log(`\n  The Petrichor is open at http://localhost:${PORT}`);
+    console.log(`\n  Petrichor House is open at http://localhost:${PORT}`);
     console.log(`  Admin dashboard:        http://localhost:${PORT}/admin  (password: ${process.env.ADMIN_PASSWORD ? '[from ADMIN_PASSWORD]' : ADMIN_PASSWORD})\n`);
   });
 }

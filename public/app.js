@@ -1,4 +1,4 @@
-// The Petrichor: public site.
+// Petrichor House Kakamega: public site.
 (() => {
   const $ = (s, el = document) => el.querySelector(s);
   const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -72,31 +72,63 @@
     $('#year').textContent = new Date().getFullYear();
   }
 
-  // Generated artwork per room type, so the site needs no image files.
+  // Generated artwork per room type, used until real photos are added to public/photos/.
   function roomArt(t, i) {
-    const [a, b] = t.palette || ['#2f4a3a', '#b08d57'];
+    const [a, b] = t.palette || ['#3f6b4a', '#c9c3b8'];
     const g = `g${i}`;
     const scenes = [
-      `<rect x="90" y="150" width="220" height="120" fill="#efe6d3"/><rect x="90" y="150" width="220" height="16" fill="${b}"/><rect x="120" y="190" width="160" height="50" rx="6" fill="#fbf8f2"/><rect x="120" y="180" width="70" height="22" rx="8" fill="#e5d8bd"/><rect x="210" y="180" width="70" height="22" rx="8" fill="#e5d8bd"/>`,
-      `<rect x="60" y="90" width="280" height="170" fill="none" stroke="#efe6d3" stroke-width="6"/><line x1="200" y1="90" x2="200" y2="260" stroke="#efe6d3" stroke-width="4"/><ellipse cx="200" cy="245" rx="90" ry="22" fill="#efe6d3"/><ellipse cx="200" cy="240" rx="76" ry="14" fill="${b}" opacity=".6"/>`,
-      `<polygon points="70,120 200,60 330,120" fill="#0e1a15" opacity=".8"/><rect x="85" y="120" width="230" height="140" fill="${b}" opacity=".25" stroke="#efe6d3" stroke-width="3"/><line x1="162" y1="120" x2="162" y2="260" stroke="#efe6d3" stroke-width="2"/><line x1="238" y1="120" x2="238" y2="260" stroke="#efe6d3" stroke-width="2"/><rect x="60" y="258" width="280" height="10" fill="#c9b48a"/>`,
-      `<rect x="40" y="200" width="320" height="70" fill="${b}" opacity=".35"/><rect x="60" y="214" width="280" height="40" fill="#7fb2b0" opacity=".55"/><rect x="110" y="110" width="180" height="90" fill="#efe6d3"/><polygon points="95,112 200,62 305,112" fill="#0e1a15"/><rect x="185" y="150" width="30" height="50" fill="${b}"/>`,
+      // studio: garden window, double bed, desk, kitchenette, hanging plant
+      `<rect x="40" y="40" width="150" height="130" fill="#8fae84" opacity=".55" stroke="#e4e1db" stroke-width="5"/><line x1="115" y1="40" x2="115" y2="170" stroke="#e4e1db" stroke-width="3"/>
+       <g fill="#3f6b4a" opacity=".8"><ellipse cx="80" cy="150" rx="40" ry="26"/><ellipse cx="150" cy="140" rx="36" ry="30"/></g>
+       <rect x="40" y="190" width="200" height="60" fill="#e9e6df"/><rect x="40" y="182" width="200" height="14" rx="4" fill="#a06e46"/><rect x="56" y="196" width="66" height="20" rx="8" fill="#f5f3ef"/><rect x="134" y="196" width="66" height="20" rx="8" fill="#f5f3ef"/><rect x="40" y="226" width="200" height="24" fill="${a}"/>
+       <rect x="262" y="150" width="100" height="100" fill="#8a5a38"/><rect x="262" y="146" width="100" height="8" fill="#c9c3b8"/><rect x="276" y="168" width="32" height="70" fill="#a06e46" stroke="#6f4a2e"/><rect x="316" y="168" width="32" height="70" fill="#a06e46" stroke="#6f4a2e"/><rect x="282" y="122" width="22" height="24" fill="#c9c3b8"/>
+       <path d="M330 0v60" stroke="#c9c3b8" stroke-width="2"/><ellipse cx="330" cy="66" rx="16" ry="9" fill="#c9c3b8"/><g stroke="#4f7d58" stroke-width="4" fill="none"><path d="M318 68c-6 16-4 30 0 40"/><path d="M330 72c0 16 2 28 0 44"/><path d="M342 68c6 14 4 28-2 38"/></g>`,
+      // dining hall: tall windows, hanging plants, tables
+      `<g fill="#3a4c43"><rect x="40" y="30" width="80" height="170"/><rect x="160" y="30" width="80" height="170"/><rect x="280" y="30" width="80" height="170"/></g>
+       <g fill="#8fae84" opacity=".5"><rect x="40" y="120" width="80" height="80"/><rect x="160" y="120" width="80" height="80"/><rect x="280" y="120" width="80" height="80"/></g>
+       <g fill="#a06e46"><rect x="60" y="220" width="90" height="8"/><rect x="250" y="220" width="90" height="8"/></g>
+       <g stroke="#4f7d58" stroke-width="4" fill="none"><path d="M140 0v40M140 40c-8 16-6 30 0 44M140 40c8 16 6 30 0 44M260 0v50M260 50c-8 16-6 30 0 44M260 50c8 16 6 30 0 44"/></g>`,
     ];
     const lines = Array.from({ length: 24 }, (_, k) => {
       const x = (k * 53 + i * 31) % 400, y = (k * 37 + i * 19) % 300;
       return `<line x1="${x}" y1="${y}" x2="${x - 4}" y2="${y + 18}"/>`;
     }).join('');
     return `<svg viewBox="0 0 400 280" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-      <defs><linearGradient id="${g}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${b}"/><stop offset=".55" stop-color="${a}"/><stop offset="1" stop-color="#0e1a15"/></linearGradient></defs>
+      <defs><linearGradient id="${g}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d9d5ce"/><stop offset=".6" stop-color="${b}"/><stop offset="1" stop-color="#8f897f"/></linearGradient></defs>
       <rect width="400" height="280" fill="url(#${g})"/>
-      <g fill="#0b1511" opacity=".55"><ellipse cx="40" cy="60" rx="90" ry="60"/><ellipse cx="370" cy="40" rx="100" ry="70"/></g>
       ${scenes[i % scenes.length]}
-      <g stroke="#f4efe4" stroke-opacity=".3" stroke-width="1.2">${lines}</g>
+      <g stroke="#ffffff" stroke-opacity=".35" stroke-width="1.2">${lines}</g>
     </svg>`;
+  }
+
+  // Real photos: drop files into public/photos/ with these names and they replace the artwork.
+  const PHOTOS = ['exterior', 'studio', 'dining', 'bar', 'garden', 'pizza'];
+  const CAPTIONS = { exterior: 'The house', studio: 'Garden studio', dining: 'Dining hall', bar: 'Outdoor bar', garden: 'The garden', pizza: 'From the pizzeria' };
+  const found = {};
+  async function findPhotos() {
+    const all = await api('/api/photos').catch(() => ({}));
+    PHOTOS.forEach((n) => all[n] && (found[n] = all[n]));
+  }
+  const photoTag = (name, alt) => `<img src="${found[name]}" alt="${esc(alt)}" loading="lazy" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover" />`;
+  function applyPhotos() {
+    if (found.exterior) {
+      $('.hero').style.backgroundImage = `linear-gradient(180deg, rgba(22,29,26,.78), rgba(28,36,32,.6) 50%, rgba(28,36,32,.92)), url(${found.exterior})`;
+      $('.hero').style.backgroundSize = 'cover';
+      $('.hero').style.backgroundPosition = 'center';
+    }
+    const storyPhoto = found.garden || found.exterior;
+    if (storyPhoto) { $('.story-art svg').outerHTML = photoTag(found.garden ? 'garden' : 'exterior', 'Petrichor House'); $('.story-art .caption').style.cssText = 'color:var(--cream);text-shadow:0 2px 12px rgba(0,0,0,.5)'; }
+    if (found.studio) $$('.room-art svg').forEach((svg) => (svg.outerHTML = photoTag('studio', 'Garden studio')));
+    const have = PHOTOS.filter((n) => found[n]);
+    if (have.length) {
+      $('#gallery').hidden = false;
+      $('#galleryGrid').innerHTML = have.map((n) => `<figure class="shot">${photoTag(n, CAPTIONS[n])}<figcaption>${CAPTIONS[n]}</figcaption></figure>`).join('');
+    }
   }
 
   // ---------- rooms ----------
   function renderRooms() {
+    $('#roomsGrid').classList.toggle('single', roomTypes.length === 1);
     $('#roomsGrid').innerHTML = roomTypes
       .map(
         (t, i) => `
@@ -105,11 +137,11 @@
         <div class="room-body">
           <h3>${esc(t.name)}</h3>
           <div class="tagline">${esc(t.tagline || '')}</div>
-          <div class="specs"><span>${t.size} m²</span><span>Sleeps ${t.capacity}</span><span>${esc(t.bed)}</span></div>
+          <div class="specs"><span>${t.size} m²</span><span>Sleeps ${t.capacity}</span><span>${esc(t.bed)}</span><span>${t.rooms} studio${t.rooms === 1 ? '' : 's'}</span></div>
           <p>${esc(t.description)}</p>
           <div class="amenities">${(t.amenities || []).map((a) => `<span>${esc(a)}</span>`).join('')}</div>
           <div class="room-foot">
-            <div class="price">${kes(t.price)} <small>/ night</small></div>
+            <div class="price">${kes(t.price)} <small>/ night, B&amp;B</small></div>
             <button class="btn small" data-book-type="${t.id}">Reserve</button>
           </div>
         </div>
@@ -174,7 +206,7 @@
       <div class="grid-3">
         <label class="field">Arrive<input type="date" id="bkIn" min="${TODAY}" value="${bk.checkIn}" /></label>
         <label class="field">Depart<input type="date" id="bkOut" min="${addDays(bk.checkIn, 1)}" value="${bk.checkOut}" /></label>
-        <label class="field">Guests<select id="bkGuests">${[1, 2, 3, 4, 5, 6].map((n) => `<option ${n == bk.guests ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
+        <label class="field">Guests<select id="bkGuests">${Array.from({ length: Math.max(...roomTypes.map((t) => t.capacity), 1) }, (_, k) => k + 1).map((n) => `<option ${n == bk.guests ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
       </div>
       <div class="type-options" id="bkTypes"><p class="empty">Checking open rooms…</p></div>
       <div class="error" id="bkError"></div>
@@ -285,10 +317,10 @@
   // ---------- restaurant ----------
   let tSel = null;
   function dining() {
-    $('#hours').innerHTML = hotel.dining.services.map((s) => `<li><span>${esc(s.name)}</span><span>${s.start} – ${s.end} seatings</span></li>`).join('') + `<li><span>Fireside Bar</span><span>11:00 – late</span></li>`;
+    $('#hours').innerHTML = hotel.dining.services.map((s) => `<li><span>${esc(s.name)}</span><span>${s.start} – ${s.end} seatings</span></li>`).join('') + `<li><span>Outdoor Bar</span><span>11:00 – late</span></li><li><span>Pizzeria</span><span>12:00 – 22:00</span></li>`;
     $('#tDate').min = TODAY;
     $('#tDate').value = TODAY;
-    $('#tParty').innerHTML = Array.from({ length: 10 }, (_, i) => `<option ${i === 1 ? 'selected' : ''}>${i + 1}</option>`).join('');
+    $('#tParty').innerHTML = Array.from({ length: 8 }, (_, i) => `<option ${i === 1 ? 'selected' : ''}>${i + 1}</option>`).join('');
     $('#tDate').onchange = $('#tParty').onchange = loadSlots;
     $('#tForm').onsubmit = async (e) => {
       e.preventDefault();
@@ -468,6 +500,7 @@
     }
     TODAY = hotel.today;
     renderRooms();
+    findPhotos().then(applyPhotos);
     calendarControls();
     renderCalendar();
     heroSearch();

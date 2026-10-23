@@ -1,4 +1,4 @@
-// The Petrichor: staff dashboard.
+// Petrichor House Kakamega: staff dashboard.
 (() => {
   const $ = (s, el = document) => el.querySelector(s);
   const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -157,7 +157,7 @@
       $$('[data-del-type]', el).forEach((b) => (b.onclick = () => confirm('Delete this room type?') && attempt(async () => { await api(`/room-types/${b.closest('tr').dataset.type}`, { method: 'DELETE' }); refresh(); }, 'Deleted')));
       $$('[data-save-room]', el).forEach((b) => (b.onclick = () => { const tr = b.closest('tr'); attempt(async () => { await api(`/rooms/${tr.dataset.room}`, { method: 'PUT', body: fields(tr) }); refresh(); }, 'Room saved'); }));
       $$('[data-del-room]', el).forEach((b) => (b.onclick = () => confirm('Delete this room?') && attempt(async () => { await api(`/rooms/${b.closest('tr').dataset.room}`, { method: 'DELETE' }); refresh(); }, 'Deleted')));
-      $('#addType').onsubmit = (e) => { e.preventDefault(); attempt(async () => { await api('/room-types', { method: 'POST', body: { ...Object.fromEntries(new FormData(e.target)), bed: 'King', tagline: '', description: 'A new room at The Petrichor.' } }); refresh(); }, 'Room type added'); };
+      $('#addType').onsubmit = (e) => { e.preventDefault(); attempt(async () => { await api('/room-types', { method: 'POST', body: { ...Object.fromEntries(new FormData(e.target)), bed: 'King', tagline: '', description: 'A new room at Petrichor House.' } }); refresh(); }, 'Room type added'); };
       $('#addRoom').onsubmit = (e) => { e.preventDefault(); attempt(async () => { await api('/rooms', { method: 'POST', body: Object.fromEntries(new FormData(e.target)) }); refresh(); }, 'Room added'); };
     },
 
@@ -167,7 +167,7 @@
       const [list, tables] = await Promise.all([api('/reservations'), api('/tables')]);
       const day = list.filter((r) => d === 'all' || r.date === d).sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
       el.innerHTML = `
-        <h1>Table bookings</h1><p class="sub">Mvua restaurant. Each seating holds a table for two hours.</p>
+        <h1>Table bookings</h1><p class="sub">Restaurant, pizzeria and outdoor bar. Each seating holds a table for 90 minutes.</p>
         <div class="filters"><label class="field">Date<input type="date" id="rDate" value="${d === 'all' ? '' : d}" /></label><button class="mini" id="rAll">Show all dates</button></div>
         <div class="card">${day.length ? `<table class="data"><tr><th>Ref</th><th>Date</th><th>Time</th><th>Guest</th><th>Party</th><th>Table</th><th>Notes</th><th>Status</th></tr>
           ${day.map((r) => `<tr><td><b>${r.ref}</b></td><td>${fmtDate(r.date)}</td><td>${r.time}<br><small>${r.service}</small></td><td>${esc(r.name)}<br><small>${esc(r.phone)}</small></td><td>${r.partySize}</td><td>${esc(r.tableName)}<br><small>${esc(r.area)}</small></td><td><small>${esc(r.notes)}</small></td><td>${statusSelect('reservations', r, ['confirmed', 'seated', 'completed', 'no_show', 'cancelled'])}</td></tr>`).join('')}

@@ -1,82 +1,40 @@
 // Default data for a fresh install. Used when data/db.json does not exist,
 // or when you run `npm run reset`.
+//
+// Based on public listings for Petrichor House Kakamega (Shiyunzu, Kakamega–Mumias Road):
+// self-contained garden-view studios on bed & breakfast, a restaurant and pizzeria, and an outdoor bar.
+// Room count, rates and menu prices are placeholders: change them in the staff dashboard.
 
 const roomTypes = [
   {
-    id: 'rt-garden',
-    name: 'Garden Deluxe',
-    tagline: 'Rain-washed lawns at your door',
+    id: 'rt-studio',
+    name: 'Deluxe Double Studio, Garden View',
+    tagline: 'Self-contained, quiet, and looking onto the garden',
     description:
-      'Our signature garden-view room, individually furnished with hand-loomed throws, a writing desk and a private kitchenette. Wake to birdsong from the Isukha gardens.',
-    price: 18500,
+      'Each studio is individually furnished and fully self-contained: a double bed, a work desk, a sofa corner, wooden cabinetry and a kitchenette, with a private shower room and a view over the garden. Breakfast, cooked to order, is included every morning.',
+    price: 7500,
     capacity: 2,
-    size: 38,
-    bed: 'King or twin',
+    size: 28,
+    bed: '1 double bed',
     view: 'Garden',
-    amenities: ['Cooked-to-order breakfast', 'Kitchenette', '55" smart TV', 'Rain shower', 'Fibre Wi-Fi', 'Nespresso'],
-    palette: ['#2f4a3a', '#7a9a6b'],
-  },
-  {
-    id: 'rt-forest',
-    name: 'Forest Junior Suite',
-    tagline: 'A lounge that looks into the canopy',
-    description:
-      'A generous suite with a separate lounge, freestanding stone bath and a balcony facing the green ridge toward Kakamega Forest. Turndown with local forest-honey treats.',
-    price: 28000,
-    capacity: 3,
-    size: 56,
-    bed: 'Super king',
-    view: 'Forest ridge',
-    amenities: ['Separate lounge', 'Stone soaking tub', 'Balcony', 'Butler on call', 'Minibar', 'Bose sound'],
-    palette: ['#1f3b30', '#4f7a5a'],
-  },
-  {
-    id: 'rt-pavilion',
-    name: 'Rain Pavilion Suite',
-    tagline: 'Glass walls, tin roof, the sound of rain',
-    description:
-      'A free-standing pavilion with a glass-walled bedroom, outdoor rain shower and private deck. Designed for the afternoon downpours Kakamega is famous for.',
-    price: 45000,
-    capacity: 4,
-    size: 84,
-    bed: 'Super king + daybed',
-    view: 'Private garden',
-    amenities: ['Private deck', 'Outdoor rain shower', 'Fireplace', 'Personal butler', 'In-room dining priority', 'Airport transfer'],
-    palette: ['#203530', '#8a7a55'],
-  },
-  {
-    id: 'rt-isukha',
-    name: 'Isukha Presidential Villa',
-    tagline: 'Two bedrooms, a plunge pool and total privacy',
-    description:
-      'Our most exclusive address: two bedrooms, a heated plunge pool, a private chef kitchen and a guided Kakamega Forest dawn walk for every stay.',
-    price: 95000,
-    capacity: 6,
-    size: 210,
-    bed: '2 super kings',
-    view: 'Panoramic',
-    amenities: ['Heated plunge pool', 'Private chef', 'Two bedrooms', 'Dawn forest walk', 'Chauffeured transfers', 'Champagne on arrival'],
-    palette: ['#1a2a24', '#b08d57'],
+    amenities: ['Breakfast included', 'Kitchenette', 'Work desk', 'Smart TV', 'Free Wi-Fi', 'Private shower', 'Free toiletries', 'Bottled water', 'Daily housekeeping'],
+    palette: ['#3f6b4a', '#c9c3b8'],
   },
 ];
 
-const rooms = [
-  ...['101', '102', '103', '104', '105', '106', '107', '108'].map((n) => ({ id: `room-${n}`, number: n, typeId: 'rt-garden', status: 'active' })),
-  ...['201', '202', '203', '204', '205'].map((n) => ({ id: `room-${n}`, number: n, typeId: 'rt-forest', status: 'active' })),
-  ...['P1', 'P2', 'P3'].map((n) => ({ id: `room-${n}`, number: n, typeId: 'rt-pavilion', status: 'active' })),
-  { id: 'room-V1', number: 'V1', typeId: 'rt-isukha', status: 'active' },
-];
+const rooms = ['S1', 'S2', 'S3', 'S4'].map((n) => ({ id: `room-${n}`, number: n, typeId: 'rt-studio', status: 'active' }));
 
 const tables = [
-  { id: 't-1', name: 'T1', capacity: 2, area: 'Rain Garden Terrace', active: true },
-  { id: 't-2', name: 'T2', capacity: 2, area: 'Rain Garden Terrace', active: true },
-  { id: 't-3', name: 'T3', capacity: 2, area: 'Rain Garden Terrace', active: true },
-  { id: 't-4', name: 'T4', capacity: 4, area: 'Rain Garden Terrace', active: true },
-  { id: 't-5', name: 'T5', capacity: 4, area: 'Main Dining Room', active: true },
-  { id: 't-6', name: 'T6', capacity: 4, area: 'Main Dining Room', active: true },
-  { id: 't-7', name: 'T7', capacity: 6, area: 'Main Dining Room', active: true },
-  { id: 't-8', name: 'T8', capacity: 6, area: 'Fireside Bar', active: true },
-  { id: 't-9', name: 'Chef\'s Table', capacity: 10, area: 'Private Room', active: true },
+  { id: 't-1', name: 'T1', capacity: 2, area: 'Dining Hall', active: true },
+  { id: 't-2', name: 'T2', capacity: 2, area: 'Dining Hall', active: true },
+  { id: 't-3', name: 'T3', capacity: 4, area: 'Dining Hall', active: true },
+  { id: 't-4', name: 'T4', capacity: 4, area: 'Dining Hall', active: true },
+  { id: 't-5', name: 'T5', capacity: 6, area: 'Dining Hall', active: true },
+  { id: 't-6', name: 'G1', capacity: 4, area: 'Garden Terrace', active: true },
+  { id: 't-7', name: 'G2', capacity: 4, area: 'Garden Terrace', active: true },
+  { id: 't-8', name: 'G3', capacity: 8, area: 'Garden Terrace', active: true },
+  { id: 't-9', name: 'B1', capacity: 2, area: 'Outdoor Bar', active: true },
+  { id: 't-10', name: 'B2', capacity: 2, area: 'Outdoor Bar', active: true },
 ];
 
 let m = 0;
@@ -92,47 +50,59 @@ const item = (category, name, description, price, tags = [], deliverable = true)
 });
 
 const menu = [
-  item('Breakfast', 'Petrichor Full Breakfast', 'Cooked to order: free-range eggs, beef sausage, roast tomato, mushrooms, sourdough and Kakamega honey.', 1800, ['Signature']),
-  item('Breakfast', 'Mandazi & Chai Basket', 'Warm cardamom mandazi with spiced masala chai for two.', 950, ['Vegetarian']),
-  item('Breakfast', 'Arrowroot & Sweet Potato Plate', 'Steamed nduma and viazi vitamu, avocado, boiled eggs, fresh passion juice.', 1200, ['Vegetarian', 'Local']),
-  item('Starters', 'Omena Crisp', 'Lake Victoria silver cyprinid, flash-fried with lime, chilli salt and kachumbari.', 1100, ['Local']),
-  item('Starters', 'Smoked Tilapia Croquettes', 'With pickled red onion and dhania aioli.', 1350),
-  item('Starters', 'Garden Greens Soup', 'Tsisaka, managu and pumpkin, finished with cream and toasted seeds.', 900, ['Vegetarian']),
-  item('Mains', 'Ingokho ya Kienyeji', 'The Luhya classic: slow-cooked free-range chicken in its own broth, served with obusuma (ugali) and traditional greens.', 2600, ['Signature', 'Local']),
-  item('Mains', 'Whole Lake Tilapia', 'Wet-fry or charcoal-grilled, with ugali, sukuma and tomato relish.', 2900, ['Local']),
-  item('Mains', 'Nyama Choma Platter', 'Roast goat ribs and leg, mukimo, kachumbari and pili pili. Serves two.', 4200, ['To share']),
-  item('Mains', 'Beef Fillet, Forest Mushroom', '250g grass-fed fillet, wild mushroom jus, matoke purée.', 4800),
-  item('Mains', 'Coconut Bean Curry', 'Njahi and red kidney beans in coconut, chapati and kachumbari.', 1700, ['Vegan']),
-  item('Mains', 'Pilau ya Mbuzi', 'Coastal-spiced goat pilau with raita and fresh chilli.', 2400),
-  item('Desserts', 'Kakamega Honey Panna Cotta', 'Forest honey, roast pineapple and macadamia brittle.', 950, ['Signature']),
-  item('Desserts', 'Dark Chocolate & Coffee Tart', 'Made with Kenyan AA coffee and Madagascan cocoa.', 1100),
-  item('Desserts', 'Tropical Fruit Plate', 'Mango, pawpaw, passion and pineapple from western Kenya farms.', 750, ['Vegan']),
-  item('Drinks', 'Kenyan AA Pour-Over', 'Single-origin, brewed at your table.', 450),
-  item('Drinks', 'Masala Chai Pot', 'Kericho tea, ginger, cardamom, whole milk.', 400),
-  item('Drinks', 'Fresh Passion & Mint', 'Pressed to order.', 450, ['Vegan']),
-  item('Drinks', 'Petrichor Dawa', 'Vodka, lime, Kakamega honey and crushed ice: our house twist on the Kenyan classic.', 1200, ['Signature', '18+'], false),
-  item('Drinks', 'Tusker Lager', 'Ice cold, 500ml.', 450, ['18+'], false),
+  item('Breakfast', 'Petrichor Cooked Breakfast', 'Cooked to order: eggs your way, sausage, toast, baked beans, grilled tomato, fruit, and tea or coffee. Included for staying guests.', 750, ['House favourite']),
+  item('Breakfast', 'Spanish Omelette & Toast', 'Three-egg omelette with onion, tomato and peppers.', 450, ['Vegetarian']),
+  item('Breakfast', 'Pancakes & Fruit', 'Stack of pancakes with honey and seasonal fruit.', 500, ['Vegetarian']),
+  item('Breakfast', 'Mandazi & Masala Chai', 'Two fresh mandazi with a pot of spiced chai.', 250, ['Vegetarian']),
+
+  item('Pizzeria', 'Margherita', 'Tomato, mozzarella and basil. Simple and perfect.', 900, ['Vegetarian']),
+  item('Pizzeria', 'Veggie Garden', 'Peppers, onion, mushroom, sweetcorn and olives.', 1100, ['Vegetarian']),
+  item('Pizzeria', 'Hawaiian', 'Ham and pineapple.', 1200),
+  item('Pizzeria', 'Chicken Tikka', 'Tikka-spiced chicken, red onion, green chilli and coriander.', 1300, ['Spicy']),
+  item('Pizzeria', 'BBQ Beef', 'Smoky BBQ sauce, minced beef, onion and peppers.', 1400),
+  item('Pizzeria', 'Petrichor Special', 'Chicken, beef, mushroom, peppers and extra cheese. Our signature pie.', 1600, ['Signature']),
+
+  item('Mains', 'Kienyeji Chicken', 'Slow-cooked free-range chicken (quarter) with ugali or chips and greens.', 1100, ['Local']),
+  item('Mains', 'Whole Fried Tilapia', 'Lake Victoria tilapia, wet or dry fry, with ugali and sukuma wiki.', 1200, ['Local']),
+  item('Mains', 'Goat Nyama Choma', 'Half a kilo of roast goat with kachumbari and ugali.', 950, ['To share']),
+  item('Mains', 'Beef Stew & Rice', 'Slow-braised beef in tomato gravy with pilau or white rice.', 750),
+  item('Mains', 'Chicken & Chips', 'Quarter chicken, fried or grilled, with chips and salad.', 800),
+  item('Mains', 'Vegetable Curry & Chapati', 'Mixed vegetables and beans in a mild coconut curry.', 600, ['Vegan']),
+
+  item('Snacks', 'Chips Masala', 'Fries tossed in spicy masala sauce.', 350, ['Spicy']),
+  item('Snacks', 'Beef Samosas (3)', 'With lemon and chilli dip.', 250),
+  item('Snacks', 'Chicken Wings (6)', 'BBQ or peri-peri.', 650),
+
+  item('Desserts', 'Fruit Salad', 'Pawpaw, mango, pineapple and passion.', 300, ['Vegan']),
+  item('Desserts', 'Ice Cream (2 scoops)', 'Vanilla, chocolate or strawberry.', 300),
+
+  item('Drinks', 'Kenyan Coffee', 'Freshly brewed.', 200),
+  item('Drinks', 'Masala Chai', 'Spiced Kenyan tea with milk.', 150),
+  item('Drinks', 'Fresh Juice', 'Passion, mango or pineapple.', 250, ['Vegan']),
+  item('Drinks', 'Soda (500ml)', 'Coke, Fanta, Sprite or Stoney.', 100),
+  item('Drinks', 'Tusker Lager', 'Ice cold from the outdoor bar.', 300, ['18+'], false),
+  item('Drinks', 'House Wine (glass)', 'Red or white.', 500, ['18+'], false),
 ];
 
 const deliveryConfig = {
   // Delivery runs leave the kitchen every 3 hours through the day.
-  slots: ['06:00', '09:00', '12:00', '15:00', '18:00', '21:00'],
-  capacityPerSlot: 12,
+  slots: ['09:00', '12:00', '15:00', '18:00', '21:00'],
+  capacityPerSlot: 10,
   cutoffMinutes: 45,
-  feeOutside: 250,
-  minimumOrder: 800,
+  feeOutside: 200,
+  minimumOrder: 500,
   freeInRoom: true,
 };
 
 const diningConfig = {
-  // Seating times every 30 minutes within each service; each seating holds a table for 2 hours.
+  // Seating times every 30 minutes within each service; each seating holds a table for 90 minutes.
   services: [
-    { name: 'Breakfast', start: '07:00', end: '10:00' },
+    { name: 'Breakfast', start: '07:30', end: '09:00' },
     { name: 'Lunch', start: '12:30', end: '14:30' },
-    { name: 'Dinner', start: '18:30', end: '21:30' },
+    { name: 'Dinner', start: '18:30', end: '21:00' },
   ],
   intervalMinutes: 30,
-  seatingMinutes: 120,
+  seatingMinutes: 90,
 };
 
 module.exports = function seed() {
