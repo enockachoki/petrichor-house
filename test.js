@@ -59,6 +59,16 @@ server.listen(0, async () => {
     r = await call('POST', '/api/orders', { date: day(-1), slot: '12:00', name: 'A', phone: '07', destinationType: 'room', room: 'S1', items: [{ id: menuId('Petrichor Special'), qty: 1 }] });
     assert.equal(r.status, 400); ok('past runs closed');
 
+    r = await call('GET', '/api/venues');
+    assert.equal(r.data.venues.length, 5); ok('5 grounds and venues listed');
+    const ev = { venueId: 'v-forest', date: day(10), guests: 150, eventType: 'Wedding', name: 'Wanjiku', phone: '0796306263' };
+    r = await call('POST', '/api/enquiries', ev);
+    assert.equal(r.status, 201); assert.equal(r.data.status, 'new'); ok('free event enquiry received');
+    const evId = r.data.id;
+    r = await call('POST', '/api/enquiries', { ...ev, guests: 400 });
+    assert.equal(r.status, 400); ok('over-capacity event refused');
+    r = await call('POST', '/api/enquiries', { ...ev, eventType: 'Rave' });
+    assert.equal(r.status, 400); ok('unknown event type refused');
     r = await call('GET', '/api/admin/overview');
     assert.equal(r.status, 401); ok('admin requires sign-in');
     r = await call('POST', '/api/admin/login', { password: 'wrong' });
@@ -73,6 +83,10 @@ server.listen(0, async () => {
     assert.equal(r.status, 409); ok('room with bookings cannot be deleted');
     r = await call('POST', '/api/admin/tables', { name: 'T6', capacity: 8, area: 'Dining Hall' }, token);
     assert.equal(r.status, 201); ok('admin adds a table');
+    r = await call('PATCH', `/api/admin/enquiries/${evId}`, { status: 'confirmed' }, token);
+    assert.equal(r.data.status, 'confirmed');
+    r = await call('POST', '/api/enquiries', ev);
+    assert.equal(r.status, 409); ok('confirmed event blocks that venue and date');
     r = await call('PATCH', `/api/admin/bookings/${bookingId}`, { status: 'cancelled' }, token);
     assert.equal(r.data.status, 'cancelled'); ok('admin cancels a booking');
     r = await call('PUT', '/api/admin/delivery-config', { slots: '06:00, 09:00, 12:00, 15:00, 18:00, 21:00' }, token);

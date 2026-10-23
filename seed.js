@@ -37,6 +37,16 @@ const tables = [
   { id: 't-10', name: 'G4', capacity: 8, area: 'Garden', active: true },
 ];
 
+// Grounds and venues for events. No fee to enquire; the team follows up by phone.
+// `photo` names a file in public/photos/; leave it empty to show the drawn placeholder.
+const venues = [
+  { id: 'v-forest', name: 'Forest Ground', kind: 'Outdoor ground', capacity: 300, description: 'An open-air ground under tall trees, cool and shaded. Made for weddings, fellowships and big family days.', features: ['Shade trees', 'Tent space', 'Parking nearby', 'Catering from our kitchen'], photo: '', active: true },
+  { id: 'v-park', name: 'Park Ground', kind: 'Outdoor ground', capacity: 200, description: 'A wide, level lawn with open sky. Good for receptions, graduations, team days and outdoor dinners.', features: ['Open lawn', 'Tent space', 'Sound on request', 'Catering from our kitchen'], photo: '', active: true },
+  { id: 'v-hall', name: 'The Hall', kind: 'In-hall venue', capacity: 120, description: 'Our indoor hall for meetings, trainings, launches and private dinners, whatever the weather.', features: ['Chairs & tables', 'Projector on request', 'Wi-Fi', 'Tea breaks & lunch'], photo: '', active: true },
+  { id: 'v-garden', name: 'Garden Lawn', kind: 'Garden', capacity: 80, description: 'The lawn beside the house, with garden chairs and tables. Relaxed birthdays, baby showers and get-togethers.', features: ['Garden furniture', 'Next to the grill', 'Kids friendly'], photo: '', active: true },
+  { id: 'v-rooftop', name: 'Rooftop Terrace', kind: 'Rooftop', capacity: 60, description: 'The glass-roofed terrace beside the rooftop bar. Sundowners, small parties and private celebrations.', features: ['Bar service', 'Covered roof', 'Evening lighting'], photo: '', active: true },
+];
+
 let m = 0;
 const item = (category, name, description, price, tags = [], deliverable = true) => ({
   id: `m-${++m}`,
@@ -121,6 +131,8 @@ module.exports = function seed() {
     reservations: [],
     menu,
     orders: [],
+    venues,
+    enquiries: [],
     deliveryConfig,
     diningConfig,
   };

@@ -23,7 +23,11 @@ function loadDb() {
     fs.writeFileSync(DB_FILE, JSON.stringify(fresh, null, 2));
     return fresh;
   }
-  return JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
+  const data = JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
+  // Older databases miss collections added later (e.g. venues): fill them in from the defaults.
+  const defaults = seed();
+  for (const k of Object.keys(defaults)) if (data[k] === undefined) data[k] = defaults[k];
+  return data;
 }
 
 let db = loadDb();
@@ -276,6 +280,42 @@ function createOrder(body) {
   return order;
 }
 
+// ---------- venues & events ----------
+
+const EVENT_TYPES = ['Wedding', 'Birthday', 'Corporate / meeting', 'Conference / training', 'Church / fellowship', 'Graduation', 'Family gathering', 'Other'];
+
+function createEnquiry(body) {
+  requireFields(body, ['venueId', 'date', 'guests', 'eventType', 'name', 'phone']);
+  const venue = db.venues.find((v) => v.id === body.venueId && v.active);
+  if (!venue) throw bad('Please choose a venue');
+  const date = parseDate(body.date, 'date');
+  if (date < nairobiNow().date) throw bad('The event date cannot be in the past');
+  const guests = Math.floor(Number(body.guests));
+  if (!(guests >= 1)) throw bad('Number of guests must be at least 1');
+  if (guests > venue.capacity) throw bad(`${venue.name} holds up to ${venue.capacity} guests`);
+  if (!EVENT_TYPES.includes(body.eventType)) throw bad('Please choose an event type');
+  if (db.enquiries.some((e) => e.venueId === venue.id && e.date === date && e.status === 'confirmed'))
+    throw new HttpError(409, `${venue.name} is already booked on that date. Please pick another date or venue.`);
+  const e = {
+    id: id('ev'),
+    ref: ref('EV'),
+    venueId: venue.id,
+    venueName: venue.name,
+    date,
+    guests,
+    eventType: body.eventType,
+    name: clean(body.name, 100),
+    phone: clean(body.phone, 30),
+    email: clean(body.email, 120),
+    notes: clean(body.notes, 800),
+    status: 'new',
+    createdAt: new Date().toISOString(),
+  };
+  db.enquiries.push(e);
+  save();
+  return e;
+}
+
 // ---------- admin ----------
 
 const sessions = new Map(); // token -> expiry
@@ -305,6 +345,7 @@ function overview() {
     departures: db.bookings.filter((b) => b.checkOut === today && b.status === 'checked_in'),
     reservationsToday: db.reservations.filter((r) => r.date === today && r.status !== 'cancelled').sort((a, b) => a.time.localeCompare(b.time)),
     ordersToday: db.orders.filter((o) => o.date === today && o.status !== 'cancelled'),
+    newEnquiries: db.enquiries.filter((e) => e.status === 'new').sort((a, b) => a.date.localeCompare(b.date)),
     deliverySlots: deliverySlots(today),
     revenue,
   };
@@ -333,6 +374,12 @@ const COLLECTIONS = {
     prefix: 't',
     fields: { name: 'string', capacity: 'number', area: 'string', active: 'boolean' },
     canDelete: (rec) => !db.reservations.some((r) => r.tableId === rec.id && r.status === 'confirmed' && r.date >= nairobiNow().date) || 'This table has upcoming reservations. Deactivate it instead.',
+  },
+  venues: {
+    key: 'venues',
+    prefix: 'v',
+    fields: { name: 'string', kind: 'string', capacity: 'number', description: 'string', features: 'list', photo: 'string', active: 'boolean' },
+    canDelete: (rec) => !db.enquiries.some((e) => e.venueId === rec.id && ['new', 'contacted', 'confirmed'].includes(e.status) && e.date >= nairobiNow().date) || 'This venue has open enquiries. Deactivate it instead.',
   },
   menu: {
     key: 'menu',
@@ -367,6 +414,7 @@ const STATUS = {
   bookings: ['confirmed', 'checked_in', 'checked_out', 'cancelled'],
   reservations: ['confirmed', 'seated', 'completed', 'no_show', 'cancelled'],
   orders: ['received', 'preparing', 'out_for_delivery', 'delivered', 'cancelled'],
+  enquiries: ['new', 'contacted', 'confirmed', 'declined'],
 };
 
 // ---------- http ----------
@@ -423,6 +471,7 @@ async function api(req, res, url) {
       location: 'Shiyunzu, Kakamega–Mumias Road, Kakamega, Kenya',
       checkIn: '14:00',
       checkOut: '10:30',
+      phone: '+254796306263',
       today: nairobiNow().date,
       delivery: db.deliveryConfig,
       dining: db.diningConfig,
@@ -462,6 +511,8 @@ async function api(req, res, url) {
     return send(res, 200, diningAvailability(date, Number(q.party) || 2));
   }
   if (method === 'POST' && p === '/api/reservations') return send(res, 201, createReservation(await readBody(req)));
+  if (method === 'GET' && p === '/api/venues') return send(res, 200, { venues: db.venues.filter((v) => v.active), eventTypes: EVENT_TYPES });
+  if (method === 'POST' && p === '/api/enquiries') return send(res, 201, createEnquiry(await readBody(req)));
   if (method === 'GET' && p === '/api/menu') return send(res, 200, db.menu.filter((x) => x.available));
   if (method === 'GET' && p === '/api/delivery/slots') {
     const date = q.date ? parseDate(q.date, 'date') : nairobiNow().date;
@@ -540,7 +591,8 @@ async function api(req, res, url) {
     if (method === 'GET') return send(res, 200, list);
     if (method === 'POST') {
       const rec = { id: id(col.prefix), ...coerce(col.fields, await readBody(req), false) };
-      if (col.key === 'tables' && rec.active === undefined) rec.active = true;
+      if ((col.key === 'tables' || col.key === 'venues') && rec.active === undefined) rec.active = true;
+      if (col.key === 'venues') rec.features = rec.features || [];
       if (col.key === 'rooms' && !rec.status) rec.status = 'active';
       if (col.key === 'menu') {
         rec.available = rec.available ?? true;

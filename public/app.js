@@ -122,13 +122,7 @@
   }
   const photoTag = (name, alt, extra = '') => `<img src="${found[name]}" alt="${esc(alt)}" loading="lazy" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;${extra}" />`;
   function applyPhotos() {
-    if (found.exterior) {
-      const hero = $('.hero');
-      hero.classList.add('has-photo');
-      hero.style.backgroundImage = `linear-gradient(180deg, rgba(10,10,10,.72), rgba(10,10,10,.45) 45%, rgba(10,10,10,.9)), url(${found.exterior})`;
-      hero.style.backgroundSize = 'cover';
-      hero.style.backgroundPosition = 'center';
-    }
+    heroSlides();
     const story = found.terrace ? 'terrace' : found.exterior ? 'exterior' : null;
     if (story) {
       $('.story-art svg').outerHTML = photoTag(story, 'The terrace at The Petrichor');
@@ -159,6 +153,111 @@
       $('#foodStrip').hidden = false;
       $('#foodStrip').innerHTML = food.map(([n, c]) => `<figure><img src="${found[n]}" alt="${esc(c)}" loading="lazy" /><figcaption>${c}</figcaption></figure>`).join('');
     }
+  }
+
+  // ---------- hero slideshow ----------
+  // Each photo wipes in from the right behind a gold light-sweep, then slowly drifts (Ken Burns).
+  const SLIDES = [
+    ['exterior', 'The house, Shiyunzu'],
+    ['rooftop-bar', 'The rooftop bar'],
+    ['garden', 'Lunch on the lawn'],
+    ['courtyard', 'Bougainvillea courtyard'],
+    ['terrace', 'The terrace'],
+    ['studio', 'Garden studios'],
+  ];
+  const SLIDE_MS = 6000;
+  function heroSlides() {
+    const list = SLIDES.filter(([n]) => found[n]);
+    if (!list.length) return;
+    const hero = $('.hero');
+    hero.classList.add('has-slides');
+    hero.style.setProperty('--slide-ms', SLIDE_MS + 'ms');
+    $('#slides').innerHTML = list.map(([n]) => `<div class="slide" style="background-image:url(${found[n]})"></div>`).join('');
+    $('#slideNav').innerHTML = `<div class="slide-caption" id="slideCap"></div><div class="slide-count" id="slideCount"></div>
+      <div class="slide-bars">${list.map((_, k) => `<button type="button" aria-label="Show photo ${k + 1}"><i></i></button>`).join('')}</div>`;
+    const slides = $$('#slides .slide');
+    const bars = $$('#slideNav .slide-bars button');
+    let cur = -1, timer;
+    const go = (k) => {
+      if (k === cur) return;
+      const prev = cur;
+      cur = (k + list.length) % list.length;
+      slides.forEach((el, i) => {
+        el.classList.toggle('active', i === cur);
+        el.classList.toggle('leaving', i === prev);
+        if (i !== cur && i !== prev) el.classList.remove('leaving');
+      });
+      bars.forEach((b, i) => { b.classList.remove('on'); b.classList.toggle('done', i < cur); });
+      void bars[cur].offsetWidth; // restart the progress animation
+      bars[cur].classList.add('on');
+      const sw = $('#sweep');
+      sw.classList.remove('go'); void sw.offsetWidth; if (prev !== -1) sw.classList.add('go');
+      $('#slideCap').innerHTML = `<span>${esc(list[cur][1])}</span>`;
+      $('#slideCount').textContent = `${String(cur + 1).padStart(2, '0')} / ${String(list.length).padStart(2, '0')}`;
+      clearTimeout(timer);
+      timer = setTimeout(() => go(cur + 1), SLIDE_MS);
+    };
+    bars.forEach((b, i) => (b.onclick = () => go(i)));
+    document.addEventListener('visibilitychange', () => { clearTimeout(timer); if (!document.hidden) timer = setTimeout(() => go(cur + 1), SLIDE_MS); });
+    go(0);
+  }
+
+  // ---------- grounds & venues ----------
+  function venueArt(v) {
+    if (v.photo) return `<img src="/photos/${encodeURIComponent(v.photo)}" alt="${esc(v.name)}" loading="lazy" />`;
+    const sky = '<rect width="400" height="300" fill="url(#vsky)"/>';
+    const defs = '<defs><linearGradient id="vsky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#cfe0c4"/><stop offset="1" stop-color="#f3f1ea"/></linearGradient></defs>';
+    const tree = (x, y, r, c = '#2f6a25') => `<rect x="${x - 4}" y="${y}" width="8" height="${r * 1.6}" fill="#5b3d26"/><circle cx="${x}" cy="${y}" r="${r}" fill="${c}"/><circle cx="${x - r * .6}" cy="${y + r * .3}" r="${r * .7}" fill="${c}"/><circle cx="${x + r * .6}" cy="${y + r * .3}" r="${r * .7}" fill="${c}"/>`;
+    const scenes = {
+      'v-forest': `${sky}<rect y="210" width="400" height="90" fill="#3b7a2a"/>${tree(40, 90, 46, '#24521c')}${tree(120, 70, 54)}${tree(220, 85, 50, '#24521c')}${tree(310, 65, 58)}${tree(380, 95, 44, '#24521c')}<rect y="232" width="400" height="68" fill="#2f6a25"/><g fill="#f7f6f2"><rect x="150" y="190" width="100" height="40"/><polygon points="140,192 200,160 260,192"/></g>`,
+      'v-park': `${sky}<rect y="180" width="400" height="120" fill="#58a03a"/><rect y="180" width="400" height="10" fill="#4b8e30"/>${tree(60, 130, 34)}${tree(340, 125, 38)}<g stroke="#f7f6f2" stroke-width="3" fill="none" opacity=".7"><path d="M0 260c120-30 280-30 400 0"/></g><g fill="#8e2232"><rect x="170" y="200" width="60" height="6"/><rect x="176" y="206" width="4" height="18"/><rect x="220" y="206" width="4" height="18"/></g>`,
+      'v-hall': `<rect width="400" height="300" fill="#f3f1ea"/><rect y="220" width="400" height="80" fill="#c9a36b"/><g fill="#1d1d1d"><rect x="40" y="40" width="70" height="120"/><rect x="165" y="40" width="70" height="120"/><rect x="290" y="40" width="70" height="120"/></g><g fill="#9cc06a" opacity=".55"><rect x="40" y="100" width="70" height="60"/><rect x="165" y="100" width="70" height="60"/><rect x="290" y="100" width="70" height="60"/></g><g fill="#8e2232">${Array.from({ length: 14 }, (_, k) => `<rect x="${28 + (k % 7) * 52}" y="${232 + Math.floor(k / 7) * 32}" width="26" height="18" rx="3"/>`).join('')}</g>`,
+      'v-garden': `${sky}<rect y="190" width="400" height="110" fill="#4b8e30"/>${tree(350, 120, 40)}<g fill="#f7f6f2"><rect x="60" y="200" width="70" height="6"/><rect x="200" y="215" width="70" height="6"/></g><g fill="#a9c7e8"><rect x="50" y="196" width="12" height="26"/><rect x="128" y="196" width="12" height="26"/></g><g fill="#e8e19c"><rect x="190" y="211" width="12" height="26"/><rect x="268" y="211" width="12" height="26"/></g>`,
+      'v-rooftop': `<rect width="400" height="300" fill="#dfe8ef"/><g stroke="#1d1d1d" stroke-width="4"><line x1="0" y1="60" x2="400" y2="40"/><line x1="100" y1="0" x2="100" y2="300"/><line x1="300" y1="0" x2="300" y2="300"/></g><rect y="200" width="400" height="100" fill="#f3f1ea"/><rect x="60" y="150" width="280" height="50" fill="#f7f6f2" stroke="#ccc"/><g fill="#7a3f22">${Array.from({ length: 7 }, (_, k) => `<rect x="${78 + k * 38}" y="200" width="10" height="44"/>`).join('')}</g>`,
+    };
+    return `<svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${defs}${scenes[v.id] || scenes['v-park']}</svg><span class="ph">Placeholder image</span>`;
+  }
+
+  async function venues() {
+    const { venues: list, eventTypes } = await api('/api/venues');
+    if (!list.length) return ($('#events').hidden = true);
+    $('#venueGrid').innerHTML = list
+      .map((v) => `<button type="button" class="venue reveal in" data-venue="${v.id}">
+        <div class="venue-art">${venueArt(v)}<span class="badge">${esc(v.kind)}</span></div>
+        <div class="venue-body"><h4>${esc(v.name)}</h4><span class="cap">Up to ${v.capacity} guests</span><p>${esc(v.description)}</p></div>
+      </button>`)
+      .join('');
+    $('#vVenue').innerHTML = list.map((v) => `<option value="${v.id}">${esc(v.name)} (up to ${v.capacity})</option>`).join('');
+    $('#vType').innerHTML = '<option value="">Choose…</option>' + eventTypes.map((t) => `<option>${esc(t)}</option>`).join('');
+    $('#vDate').min = TODAY;
+    const pick = (id) => {
+      $('#vVenue').value = id;
+      $('#vGuests').max = list.find((v) => v.id === id).capacity;
+      $$('#venueGrid .venue').forEach((b) => b.classList.toggle('selected', b.dataset.venue === id));
+    };
+    pick(list[0].id);
+    $('#vVenue').onchange = (e) => pick(e.target.value);
+    $$('#venueGrid .venue').forEach((b) => (b.onclick = () => { pick(b.dataset.venue); $('#venuePanel').scrollIntoView({ behavior: 'smooth', block: 'start' }); }));
+    $('#vForm').onsubmit = async (e) => {
+      e.preventDefault();
+      $('#vError').textContent = '';
+      const btn = e.target.querySelector('[type=submit]');
+      btn.disabled = true;
+      try {
+        const r = await api('/api/enquiries', { method: 'POST', body: Object.fromEntries(new FormData(e.target)) });
+        const wa = `https://wa.me/254796306263?text=${encodeURIComponent(`Hello The Petrichor, I sent an event request ${r.ref}: ${r.eventType} at ${r.venueName} on ${r.date} for ${r.guests} guests.`)}`;
+        e.target.hidden = true;
+        $('#vDone').innerHTML = `<div class="confirm"><p class="eyebrow">Request received</p><div class="ref">${esc(r.ref)}</div>
+          <p>${esc(r.eventType)} at ${esc(r.venueName)} · ${fmtDate(r.date)} · ${r.guests} guests</p>
+          <p style="color:var(--muted)">No fee is needed. Our team will call you on ${esc(r.phone)} to plan the details.</p>
+          <div class="actions" style="justify-content:center"><a class="btn wa" href="${wa}" target="_blank" rel="noopener">Follow up on WhatsApp</a><button class="btn ghost" id="vAgain" style="color:var(--ink)">New request</button></div></div>`;
+        $('#vAgain').onclick = () => { e.target.reset(); e.target.hidden = false; $('#vDone').innerHTML = ''; pick(list[0].id); };
+      } catch (err) {
+        $('#vError').textContent = err.message;
+      } finally {
+        btn.disabled = false;
+      }
+    };
   }
 
   // ---------- rooms ----------
@@ -416,6 +515,7 @@
   const order = { date: null, slot: null, dest: 'room', items: {} };
   function delivery() {
     const cfg = hotel.delivery;
+    $('#runTimes').textContent = cfg.slots.join(' · ');
     $('#deliveryIntro').textContent = `Our kitchen sends a delivery run every three hours: ${cfg.slots.join(', ')}. Order at least ${cfg.cutoffMinutes} minutes before a run. Free to your room, ${kes(cfg.feeOutside)} anywhere in Kakamega town. Minimum order ${kes(cfg.minimumOrder)}.`;
     const days = [0, 1, 2].map((n) => addDays(TODAY, n));
     order.date = TODAY;
@@ -508,8 +608,9 @@
       const r = e.target.ref.value.trim().toUpperCase();
       const out = $('#lookupResult');
       const kind = r.startsWith('PH') ? 'bookings' : r.startsWith('TB') ? null : r.startsWith('DL') ? 'orders' : null;
-      if (r.startsWith('TB')) return (out.innerHTML = `<p>Table bookings are confirmed by phone on the day. To change one, call +254 700 000 000 quoting <b>${esc(r)}</b>.</p>`);
-      if (!kind) return (out.innerHTML = '<p>References start with PH (stays), TB (tables) or DL (deliveries).</p>');
+      if (r.startsWith('TB')) return (out.innerHTML = `<p>Table bookings are confirmed by phone on the day. To change one, call <a href="tel:+254796306263">+254 796 306 263</a> quoting <b>${esc(r)}</b>.</p>`);
+      if (r.startsWith('EV')) return (out.innerHTML = `<p>Our events team will call you about request <b>${esc(r)}</b>. To follow up, call or WhatsApp <a href="tel:+254796306263">+254 796 306 263</a>.</p>`);
+      if (!kind) return (out.innerHTML = '<p>References start with PH (stays), TB (tables), DL (deliveries) or EV (events).</p>');
       try {
         const x = await api(`/api/${kind}/${encodeURIComponent(r)}`);
         const status = x.status.replace(/_/g, ' ');
@@ -542,6 +643,7 @@
     dining();
     renderMenu();
     delivery();
+    venues();
     lookup();
   }
   boot();

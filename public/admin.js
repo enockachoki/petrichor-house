@@ -87,6 +87,7 @@
           <div class="kpi"><span>Arrivals today</span><b>${o.arrivals.length}</b></div>
           <div class="kpi"><span>Tables today</span><b>${o.reservationsToday.length}</b></div>
           <div class="kpi"><span>Deliveries today</span><b>${o.ordersToday.length}</b></div>
+          <div class="kpi"><span>New event enquiries</span><b>${o.newEnquiries.length}</b></div>
           <div class="kpi"><span>Booked revenue</span><b style="font-size:1.7rem">${kes(o.revenue)}</b></div>
         </div>
         <div class="two">
@@ -178,6 +179,34 @@
       $('#rDate').onchange = (e) => { VIEWS.reservations.date = e.target.value || 'all'; refresh(); };
       $('#rAll').onclick = () => { VIEWS.reservations.date = 'all'; refresh(); };
       bindStatus(el);
+    },
+
+    async enquiries(el) {
+      const list = await api('/enquiries');
+      const f = VIEWS.enquiries.filter || 'open';
+      const shown = list.filter((e) => f === 'all' || (f === 'open' ? ['new', 'contacted'].includes(e.status) : e.status === f)).sort((a, b) => a.date.localeCompare(b.date));
+      el.innerHTML = `
+        <h1>Event enquiries</h1><p class="sub">Free venue requests from the website. Call the guest, then mark the request contacted, confirmed or declined. A confirmed event blocks that venue on that date.</p>
+        <div class="filters"><label class="field">Show<select id="eFilter">${['open', 'all', 'new', 'contacted', 'confirmed', 'declined'].map((x) => `<option ${x === f ? 'selected' : ''}>${x}</option>`).join('')}</select></label></div>
+        <div class="card">${shown.length ? `<table class="data"><tr><th>Ref</th><th>Event date</th><th>Venue</th><th>Event</th><th>Guests</th><th>Contact</th><th>Notes</th><th>Status</th></tr>
+          ${shown.map((e) => `<tr><td><b>${e.ref}</b></td><td>${fmtDate(e.date)}</td><td>${esc(e.venueName)}</td><td>${esc(e.eventType)}</td><td>${e.guests}</td><td>${esc(e.name)}<br><small><a href="tel:${esc(e.phone)}">${esc(e.phone)}</a>${e.email ? ' · ' + esc(e.email) : ''}</small><br><a class="mini" style="display:inline-block;margin-top:4px;text-decoration:none" target="_blank" rel="noopener" href="https://wa.me/${esc(e.phone.replace(/[^0-9]/g, '').replace(/^0/, '254'))}">WhatsApp</a></td><td><small>${esc(e.notes)}</small></td><td>${statusSelect('enquiries', e, ['new', 'contacted', 'confirmed', 'declined'])}</td></tr>`).join('')}
+        </table>` : '<p class="empty">No enquiries match.</p>'}</div>`;
+      $('#eFilter').onchange = (e) => { VIEWS.enquiries.filter = e.target.value; refresh(); };
+      bindStatus(el);
+    },
+
+    async venues(el) {
+      const venues = await api('/venues');
+      el.innerHTML = `
+        <h1>Grounds &amp; venues</h1><p class="sub">These show in the "Host your event" section. To use a real photo, put it in <code>public/photos/</code> and type its file name (for example <code>forest.jpg</code>); leave it empty for the drawn placeholder.</p>
+        <div class="card"><table class="data"><tr><th>Name</th><th>Type</th><th>Capacity</th><th>Description</th><th>Photo file</th><th>Shown</th><th></th></tr>
+          ${venues.map((v) => `<tr data-id="${v.id}"><td><input data-f="name" value="${esc(v.name)}" /></td><td><input data-f="kind" value="${esc(v.kind)}" /></td><td style="width:100px"><input data-f="capacity" type="number" min="1" value="${v.capacity}" /></td><td><input data-f="description" value="${esc(v.description)}" /></td><td><input data-f="photo" value="${esc(v.photo || '')}" placeholder="none" /></td><td><select data-f="active"><option value="true" ${v.active ? 'selected' : ''}>Yes</option><option value="false" ${!v.active ? 'selected' : ''}>No</option></select></td><td class="row-actions"><button class="mini primary" data-save>Save</button><button class="mini danger" data-del>Delete</button></td></tr>`).join('')}
+        </table>
+        <form class="addform" id="addVenue"><label class="field">Name<input name="name" required /></label><label class="field">Type<input name="kind" value="Outdoor ground" required /></label><label class="field">Capacity<input name="capacity" type="number" min="1" value="100" required /></label><label class="field">Description<input name="description" /></label><button class="btn small">Add venue</button></form></div>`;
+      const fields = (tr) => Object.fromEntries($$('[data-f]', tr).map((i) => [i.dataset.f, i.value]));
+      $$('[data-save]', el).forEach((b) => (b.onclick = () => { const tr = b.closest('tr'); attempt(() => api(`/venues/${tr.dataset.id}`, { method: 'PUT', body: fields(tr) }), 'Venue saved'); }));
+      $$('[data-del]', el).forEach((b) => (b.onclick = () => confirm('Delete this venue?') && attempt(async () => { await api(`/venues/${b.closest('tr').dataset.id}`, { method: 'DELETE' }); refresh(); }, 'Deleted')));
+      $('#addVenue').onsubmit = (e) => { e.preventDefault(); attempt(async () => { await api('/venues', { method: 'POST', body: Object.fromEntries(new FormData(e.target)) }); refresh(); }, 'Venue added'); };
     },
 
     async tables(el) {

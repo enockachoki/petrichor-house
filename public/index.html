@@ -20,19 +20,21 @@
       </a>
       <button class="menu-toggle" id="menuToggle" aria-label="Open menu">Menu</button>
       <div class="nav-links" id="navLinks">
+        <a href="#gallery">Gallery</a>
+        <a href="#food">Food</a>
         <a href="#stay">Rooms</a>
-        <a href="#availability">Availability</a>
-        <a href="#dine">Dine</a>
+        <a href="#dine">Tables</a>
+        <a href="#events">Events</a>
         <a href="#menu">Menu</a>
-        <a href="#delivery">Delivery</a>
-        <a href="#discover">Around</a>
-        <a href="#manage">My booking</a>
+        <a href="#contact">Contact</a>
         <button class="btn small" data-open-booking>Reserve</button>
       </div>
     </div>
   </nav>
 
   <header class="hero" id="top">
+    <div class="slides" id="slides" aria-hidden="true"></div>
+    <i class="sweep" id="sweep" aria-hidden="true"></i>
     <canvas id="rain" aria-hidden="true"></canvas>
     <svg class="canopy" viewBox="0 0 1440 400" preserveAspectRatio="none" aria-hidden="true">
       <path fill="#161d1a" d="M0 260c60-40 110-60 170-40s90-60 160-70 110 50 170 30 80-90 160-90 110 80 180 60 100-70 170-60 90 60 160 40 90-50 140-40 80 40 130 30v280H0z"/>
@@ -42,6 +44,11 @@
       <p class="eyebrow">Boutique guest house · Shiyunzu, Kakamega</p>
       <h1>The scent of <em>first rain</em></h1>
       <p class="lede">Petrichor is the earthy smell of rain on dry ground. Ours is a quiet white house set on green lawns, three kilometres out of Kakamega town on the Mumias road, with garden-view studios, a rooftop bar, a grill and pizzeria, and breakfast cooked the moment you want it.</p>
+      <div class="hero-ctas">
+        <a class="btn" href="#food">Order food</a>
+        <a class="btn ghost" href="tel:+254796306263">Call +254 796 306 263</a>
+        <a class="btn ghost" href="https://wa.me/254796306263" target="_blank" rel="noopener">WhatsApp</a>
+      </div>
       <form class="booking-bar" id="heroSearch">
         <label>Arrive<input type="date" name="checkIn" required /></label>
         <label>Depart<input type="date" name="checkOut" required /></label>
@@ -51,6 +58,7 @@
         <button class="btn" type="submit">Check availability</button>
       </form>
     </div>
+    <div class="slide-nav" id="slideNav"></div>
     <div class="scroll-hint">Scroll</div>
   </header>
 
@@ -93,7 +101,77 @@
     </div>
   </section>
 
-  <section class="section" id="stay" style="padding-top:0">
+  <section class="section" id="gallery" hidden style="padding-top:0">
+    <div class="container">
+      <div class="section-head reveal in"><div><p class="eyebrow">Look inside</p><h2>Around the house</h2></div></div>
+      <div class="gallery-grid" id="galleryGrid"></div>
+    </div>
+  </section>
+
+  <section class="section dark" id="food">
+    <div class="container">
+      <div class="section-head reveal">
+        <div><p class="eyebrow">From our kitchen</p><h2>Food &amp; ordering</h2></div>
+        <p>Kebabs and burgers off the grill, pizza from the oven, and Kenyan favourites. Eat in, call ahead, or order for delivery to your studio or anywhere in Kakamega town.</p>
+      </div>
+      <div class="food-strip" id="foodStrip" hidden></div>
+      <div class="contact-card reveal" id="contact">
+        <div>
+          <p class="eyebrow">Order or ask anything</p>
+          <h3>+254 796 306 263</h3>
+          <p>Call or WhatsApp us for orders, bookings, events and directions. We're on the Kakamega–Mumias Road in Shiyunzu, 3 km from town.</p>
+        </div>
+        <div class="contact-actions">
+          <a class="btn" href="tel:+254796306263"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1A17 17 0 0 1 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1z"/></svg>Call now</a>
+          <a class="btn wa" href="https://wa.me/254796306263?text=Hello%20The%20Petrichor%2C%20I%27d%20like%20to%20order%20food." target="_blank" rel="noopener"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2c-1.5 0-3-.4-4.3-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2c0 1.3.9 2.5 1 2.7.1.2 1.8 2.8 4.4 3.9 1.6.7 2.3.8 3.1.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.1-1.2l-.6-.3z"/></svg>WhatsApp order</a>
+          <a class="btn ghost" href="#delivery">Order online for delivery</a>
+        </div>
+        <ul class="contact-facts">
+          <li><span>Kitchen</span>07:30 – 22:00 daily</li>
+          <li><span>Delivery runs</span><span id="runTimes">Every 3 hours</span></li>
+          <li><span>Find us</span>Shiyunzu, Kakamega–Mumias Road</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="delivery" style="background:var(--concrete)">
+    <div class="container">
+      <div class="section-head reveal">
+        <div><p class="eyebrow">In-room &amp; Kakamega delivery</p><h2>Every three hours</h2></div>
+        <p id="deliveryIntro">Our kitchen sends a delivery run every three hours. Free to your studio, a small fee anywhere in Kakamega town.</p>
+      </div>
+      <div class="grid-2" style="max-width:420px;margin-bottom:18px">
+        <div class="seg" id="dDay"></div>
+      </div>
+      <div class="slots-row" id="dSlots"></div>
+      <div class="delivery-grid">
+        <div class="order-menu" id="orderMenu"></div>
+        <div class="panel basket">
+          <h4>Your order</h4>
+          <ul class="basket-lines" id="basketLines"></ul>
+          <div class="totals" id="totals"></div>
+          <form id="oForm">
+            <div class="seg" id="destSeg" style="margin-bottom:14px">
+              <button type="button" data-dest="room" class="active">To my room</button>
+              <button type="button" data-dest="address">Kakamega address</button>
+            </div>
+            <label class="field" id="roomField">Room number<input name="room" placeholder="e.g. 104" /></label>
+            <label class="field" id="addrField" style="display:none">Delivery address<textarea name="address" placeholder="Estate, building, landmark"></textarea></label>
+            <div class="grid-2" style="margin-top:14px">
+              <label class="field">Name<input name="name" required /></label>
+              <label class="field">Phone<input name="phone" required placeholder="+254…" /></label>
+            </div>
+            <label class="field" style="margin-top:14px">Notes<input name="notes" placeholder="Allergies, cutlery, gate code" /></label>
+            <button class="btn" style="width:100%;margin-top:18px" type="submit" id="oSubmit">Place order</button>
+            <div class="error" id="oError"></div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="stay">
     <div class="container">
       <div class="section-head reveal">
         <div><p class="eyebrow">Stay</p><h2>Garden studios</h2></div>
@@ -106,13 +184,6 @@
         <div><b>Free Wi-Fi</b><span>Throughout the house, with work desks in every studio</span></div>
         <div><b>24-hour desk</b><span>Someone is always here to help</span></div>
       </div>
-    </div>
-  </section>
-
-  <section class="section" id="gallery" hidden style="padding-top:0">
-    <div class="container">
-      <div class="section-head reveal in"><div><p class="eyebrow">Look inside</p><h2>Around the house</h2></div></div>
-      <div class="gallery-grid" id="galleryGrid"></div>
     </div>
   </section>
 
@@ -167,65 +238,56 @@
     </div>
   </section>
 
-  <section class="section dark" id="menu">
+  <section class="section dark" id="events">
     <div class="container">
       <div class="section-head reveal">
-        <div><p class="eyebrow">The menu</p><h2>À la carte</h2></div>
+        <div><p class="eyebrow">Grounds &amp; venues</p><h2>Host your event</h2></div>
+        <p>Weddings, meetings, birthdays, fellowships. Pick a ground or hall and tell us about your event. There's no fee to book: send the request and our team will call you to plan it.</p>
+      </div>
+      <div class="venue-grid" id="venueGrid"></div>
+      <div class="panel venue-form reveal" id="venuePanel">
+        <h4>Request a venue</h4>
+        <form id="vForm">
+          <div class="grid-2">
+            <label class="field">Venue<select name="venueId" id="vVenue" required></select></label>
+            <label class="field">Event date<input type="date" name="date" id="vDate" required /></label>
+            <label class="field">Number of guests<input type="number" name="guests" id="vGuests" min="1" required placeholder="e.g. 80" /></label>
+            <label class="field">Event type<select name="eventType" id="vType" required></select></label>
+            <label class="field">Your name<input name="name" required autocomplete="name" /></label>
+            <label class="field">Phone<input name="phone" required placeholder="+254…" autocomplete="tel" /></label>
+          </div>
+          <label class="field" style="margin-top:14px">Email (optional)<input name="email" type="email" /></label>
+          <label class="field" style="margin-top:14px">Anything else? (catering, tents, timings)<textarea name="notes"></textarea></label>
+          <div class="actions"><span class="free-note">No booking fee. Our team will reach out.</span><button class="btn" type="submit">Send request</button></div>
+          <div class="error" id="vError"></div>
+        </form>
+        <div id="vDone"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section dark" id="menu" style="background:#0b0b0b">
+    <div class="container">
+      <div class="section-head reveal">
+        <div><p class="eyebrow">The full menu</p><h2>À la carte</h2></div>
         <p>All prices in Kenya shillings, inclusive of VAT. Breakfast is included for staying guests.</p>
       </div>
-      <div class="food-strip" id="foodStrip" hidden></div>
       <div class="tabs" id="menuTabs"></div>
       <div class="menu-list" id="menuList"></div>
     </div>
   </section>
 
-  <section class="section" id="delivery">
-    <div class="container">
-      <div class="section-head reveal">
-        <div><p class="eyebrow">In-room &amp; Kakamega delivery</p><h2>Every three hours</h2></div>
-        <p id="deliveryIntro">Our kitchen sends a delivery run every three hours. Free to your studio, a small fee anywhere in Kakamega town.</p>
-      </div>
-      <div class="grid-2" style="max-width:420px;margin-bottom:18px">
-        <div class="seg" id="dDay"></div>
-      </div>
-      <div class="slots-row" id="dSlots"></div>
-      <div class="delivery-grid">
-        <div class="order-menu" id="orderMenu"></div>
-        <div class="panel basket">
-          <h4>Your order</h4>
-          <ul class="basket-lines" id="basketLines"></ul>
-          <div class="totals" id="totals"></div>
-          <form id="oForm">
-            <div class="seg" id="destSeg" style="margin-bottom:14px">
-              <button type="button" data-dest="room" class="active">To my room</button>
-              <button type="button" data-dest="address">Kakamega address</button>
-            </div>
-            <label class="field" id="roomField">Room number<input name="room" placeholder="e.g. 104" /></label>
-            <label class="field" id="addrField" style="display:none">Delivery address<textarea name="address" placeholder="Estate, building, landmark"></textarea></label>
-            <div class="grid-2" style="margin-top:14px">
-              <label class="field">Name<input name="name" required /></label>
-              <label class="field">Phone<input name="phone" required placeholder="+254…" /></label>
-            </div>
-            <label class="field" style="margin-top:14px">Notes<input name="notes" placeholder="Allergies, cutlery, gate code" /></label>
-            <button class="btn" style="width:100%;margin-top:18px" type="submit" id="oSubmit">Place order</button>
-            <div class="error" id="oError"></div>
-          </form>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="section dark" id="discover">
+  <section class="section" id="discover">
     <div class="container">
       <div class="section-head reveal">
         <div><p class="eyebrow">Around</p><h2>Near the house</h2></div>
         <p>Kakamega Airport is 18 minutes away by car. The front desk can arrange taxis and guides.</p>
       </div>
       <div class="exp-grid">
-        <div class="exp reveal"><span class="num">01</span><h4>Muliro Gardens</h4><p style="color:rgba(242,240,235,.65)">Kakamega's green park for a slow walk. It's just down the road from the house.</p><span class="dist" style="color:var(--brass-2)">5 min</span></div>
-        <div class="exp reveal"><span class="num">02</span><h4>Masinde Muliro University</h4><p style="color:rgba(242,240,235,.65)">A quiet base for visiting lecturers, parents and graduation weekends.</p><span class="dist" style="color:var(--brass-2)">6 min drive</span></div>
-        <div class="exp reveal"><span class="num">03</span><h4>Bukhungu Stadium</h4><p style="color:rgba(242,240,235,.65)">Match days, events and the town's big gatherings.</p><span class="dist" style="color:var(--brass-2)">6 min drive</span></div>
-        <div class="exp reveal"><span class="num">04</span><h4>Kakamega Forest</h4><p style="color:rgba(242,240,235,.65)">Kenya's only tropical rainforest, with colobus monkeys, hundreds of bird species and sunrise at Lirhanda Hill.</p><span class="dist" style="color:var(--brass-2)">About 40 min drive</span></div>
+        <div class="exp reveal"><span class="num">01</span><h4>Muliro Gardens</h4><p style="color:var(--muted)">Kakamega's green park for a slow walk. It's just down the road from the house.</p><span class="dist" style="color:var(--moss)">5 min</span></div>
+        <div class="exp reveal"><span class="num">02</span><h4>Masinde Muliro University</h4><p style="color:var(--muted)">A quiet base for visiting lecturers, parents and graduation weekends.</p><span class="dist" style="color:var(--moss)">6 min drive</span></div>
+        <div class="exp reveal"><span class="num">03</span><h4>Bukhungu Stadium</h4><p style="color:var(--muted)">Match days, events and the town's big gatherings.</p><span class="dist" style="color:var(--moss)">6 min drive</span></div>
+        <div class="exp reveal"><span class="num">04</span><h4>Kakamega Forest</h4><p style="color:var(--muted)">Kenya's only tropical rainforest, with colobus monkeys, hundreds of bird species and sunrise at Lirhanda Hill.</p><span class="dist" style="color:var(--moss)">About 40 min drive</span></div>
       </div>
     </div>
   </section>
@@ -235,7 +297,7 @@
       <p class="eyebrow">Manage</p>
       <h2 style="font-size:clamp(2rem,4vw,3rem);margin:12px 0 24px">Find my booking</h2>
       <form class="lookup" id="lookupForm">
-        <input name="ref" placeholder="PH… · TB… · DL…" required />
+        <input name="ref" placeholder="PH… · TB… · DL… · EV…" required />
         <button class="btn" type="submit">Look up</button>
       </form>
       <div class="lookup-result" id="lookupResult"></div>
@@ -251,7 +313,7 @@
         </div>
         <div><h5>Find us</h5><p>Shiyunzu, Kakamega–Mumias Road</p><p>Kakamega County, Kenya</p><p>3 km from Kakamega town</p></div>
         <div><h5>Times</h5><p>Check-in from 14:00</p><p>Check-out by 10:30</p><p>Breakfast 07:30–09:30</p></div>
-        <div><h5>Reach us</h5><p><a href="https://www.instagram.com/thepetrichorkakamega/" target="_blank" rel="noopener">Instagram @thepetrichorkakamega</a></p><p>+254 700 000 000</p><p><a href="/admin">Staff dashboard</a></p></div>
+        <div><h5>Reach us</h5><p><a href="https://www.instagram.com/thepetrichorkakamega/" target="_blank" rel="noopener">Instagram @thepetrichorkakamega</a></p><p><a href="tel:+254796306263">+254 796 306 263</a></p><p><a href="https://wa.me/254796306263" target="_blank" rel="noopener">WhatsApp us</a></p><p><a href="/admin">Staff dashboard</a></p></div>
       </div>
       <div class="foot-base"><span>© <span id="year"></span> The Petrichor Kakamega</span><span>Front desk open 24 hours</span></div>
     </div>
@@ -266,6 +328,11 @@
       <h3 id="bkTitle">Choose your dates</h3>
       <div id="bkBody"></div>
     </div>
+  </div>
+
+  <div class="quick" aria-label="Quick contact">
+    <a class="quick-btn wa" href="https://wa.me/254796306263?text=Hello%20The%20Petrichor" target="_blank" rel="noopener" aria-label="WhatsApp us"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2c-1.5 0-3-.4-4.3-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2c0 1.3.9 2.5 1 2.7.1.2 1.8 2.8 4.4 3.9 1.6.7 2.3.8 3.1.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.1-1.2l-.6-.3z"/></svg></a>
+    <a class="quick-btn call" href="tel:+254796306263" aria-label="Call us"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1A17 17 0 0 1 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1z"/></svg></a>
   </div>
 
   <div class="toast" id="toast"></div>
