@@ -1,4 +1,4 @@
-// Petrichor House Kakamega: public site.
+// The Petrichor Kakamega: public site.
 (() => {
   const $ = (s, el = document) => el.querySelector(s);
   const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -101,28 +101,63 @@
     </svg>`;
   }
 
-  // Real photos: drop files into public/photos/ with these names and they replace the artwork.
-  const PHOTOS = ['exterior', 'studio', 'dining', 'bar', 'garden', 'pizza'];
-  const CAPTIONS = { exterior: 'The house', studio: 'Garden studio', dining: 'Dining hall', bar: 'Outdoor bar', garden: 'The garden', pizza: 'From the pizzeria' };
-  const found = {};
+  // Real photos live in public/photos/ and replace the drawn artwork wherever they exist.
+  const GALLERY = [
+    ['rooftop-bar', 'The rooftop bar'],
+    ['garden', 'Garden seating'],
+    ['courtyard', 'The courtyard'],
+    ['terrace', 'The terrace'],
+    ['grill', 'The outdoor grill'],
+    ['lounge', 'Studio lounge & kitchenette'],
+  ];
+  const FOOD = [
+    ['food-plate', 'The Petrichor burger plate'],
+    ['food-beef-kebabs', 'Beef kebabs'],
+    ['food-chicken-kebabs', 'Chicken tikka kebabs'],
+    ['food-burger', 'Double beef burger'],
+  ];
+  let found = {};
   async function findPhotos() {
-    const all = await api('/api/photos').catch(() => ({}));
-    PHOTOS.forEach((n) => all[n] && (found[n] = all[n]));
+    found = await api('/api/photos').catch(() => ({}));
   }
-  const photoTag = (name, alt) => `<img src="${found[name]}" alt="${esc(alt)}" loading="lazy" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover" />`;
+  const photoTag = (name, alt, extra = '') => `<img src="${found[name]}" alt="${esc(alt)}" loading="lazy" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;${extra}" />`;
   function applyPhotos() {
     if (found.exterior) {
-      $('.hero').style.backgroundImage = `linear-gradient(180deg, rgba(22,29,26,.78), rgba(28,36,32,.6) 50%, rgba(28,36,32,.92)), url(${found.exterior})`;
-      $('.hero').style.backgroundSize = 'cover';
-      $('.hero').style.backgroundPosition = 'center';
+      const hero = $('.hero');
+      hero.classList.add('has-photo');
+      hero.style.backgroundImage = `linear-gradient(180deg, rgba(10,10,10,.72), rgba(10,10,10,.45) 45%, rgba(10,10,10,.9)), url(${found.exterior})`;
+      hero.style.backgroundSize = 'cover';
+      hero.style.backgroundPosition = 'center';
     }
-    const storyPhoto = found.garden || found.exterior;
-    if (storyPhoto) { $('.story-art svg').outerHTML = photoTag(found.garden ? 'garden' : 'exterior', 'Petrichor House'); $('.story-art .caption').style.cssText = 'color:var(--cream);text-shadow:0 2px 12px rgba(0,0,0,.5)'; }
-    if (found.studio) $$('.room-art svg').forEach((svg) => (svg.outerHTML = photoTag('studio', 'Garden studio')));
-    const have = PHOTOS.filter((n) => found[n]);
-    if (have.length) {
+    const story = found.terrace ? 'terrace' : found.exterior ? 'exterior' : null;
+    if (story) {
+      $('.story-art svg').outerHTML = photoTag(story, 'The terrace at The Petrichor');
+      $('.story-art .caption').style.cssText = 'color:var(--cream);text-shadow:0 2px 12px rgba(0,0,0,.6)';
+    }
+    // Studio card: cross-fade between the bedroom and the lounge.
+    const shots = ['studio', 'lounge'].filter((n) => found[n]);
+    if (shots.length) {
+      $$('.room-art svg').forEach((svg) => {
+        const art = svg.parentElement;
+        svg.outerHTML = shots.map((n, k) => photoTag(n, 'Garden studio', `transition:opacity 1.6s ease;opacity:${k ? 0 : 1}`)).join('');
+        if (shots.length > 1) {
+          let on = 0;
+          setInterval(() => {
+            on = (on + 1) % shots.length;
+            $$('img', art).forEach((img, k) => (img.style.opacity = k === on ? 1 : 0));
+          }, 4500);
+        }
+      });
+    }
+    const gal = GALLERY.filter(([n]) => found[n]);
+    if (gal.length) {
       $('#gallery').hidden = false;
-      $('#galleryGrid').innerHTML = have.map((n) => `<figure class="shot">${photoTag(n, CAPTIONS[n])}<figcaption>${CAPTIONS[n]}</figcaption></figure>`).join('');
+      $('#galleryGrid').innerHTML = gal.map(([n, c]) => `<figure class="shot">${photoTag(n, c)}<figcaption>${c}</figcaption></figure>`).join('');
+    }
+    const food = FOOD.filter(([n]) => found[n]);
+    if (food.length) {
+      $('#foodStrip').hidden = false;
+      $('#foodStrip').innerHTML = food.map(([n, c]) => `<figure><img src="${found[n]}" alt="${esc(c)}" loading="lazy" /><figcaption>${c}</figcaption></figure>`).join('');
     }
   }
 
@@ -317,7 +352,7 @@
   // ---------- restaurant ----------
   let tSel = null;
   function dining() {
-    $('#hours').innerHTML = hotel.dining.services.map((s) => `<li><span>${esc(s.name)}</span><span>${s.start} – ${s.end} seatings</span></li>`).join('') + `<li><span>Outdoor Bar</span><span>11:00 – late</span></li><li><span>Pizzeria</span><span>12:00 – 22:00</span></li>`;
+    $('#hours').innerHTML = hotel.dining.services.map((s) => `<li><span>${esc(s.name)}</span><span>${s.start} – ${s.end} seatings</span></li>`).join('') + `<li><span>Rooftop Bar</span><span>11:00 – late</span></li><li><span>Grill &amp; Pizzeria</span><span>12:00 – 22:00</span></li>`;
     $('#tDate').min = TODAY;
     $('#tDate').value = TODAY;
     $('#tParty').innerHTML = Array.from({ length: 8 }, (_, i) => `<option ${i === 1 ? 'selected' : ''}>${i + 1}</option>`).join('');

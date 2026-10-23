@@ -1,4 +1,4 @@
-// Petrichor House Kakamega: hotel website + booking API.
+// The Petrichor Kakamega: hotel website + booking API.
 // Zero dependencies: needs only Node.js 18 or newer. Data lives in data/db.json.
 
 const http = require('http');
@@ -419,7 +419,7 @@ async function api(req, res, url) {
   // ----- public -----
   if (method === 'GET' && p === '/api/hotel')
     return send(res, 200, {
-      name: 'Petrichor House Kakamega',
+      name: 'The Petrichor Kakamega',
       location: 'Shiyunzu, Kakamega–Mumias Road, Kakamega, Kenya',
       checkIn: '14:00',
       checkOut: '10:30',
@@ -591,7 +591,7 @@ const server = http.createServer(async (req, res) => {
 
 if (require.main === module) {
   server.listen(PORT, () => {
-    console.log(`\n  Petrichor House is open at http://localhost:${PORT}`);
+    console.log(`\n  The Petrichor is open at http://localhost:${PORT}`);
     console.log(`  Admin dashboard:        http://localhost:${PORT}/admin  (password: ${process.env.ADMIN_PASSWORD ? '[from ADMIN_PASSWORD]' : ADMIN_PASSWORD})\n`);
   });
 }

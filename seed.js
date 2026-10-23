@@ -1,8 +1,8 @@
 // Default data for a fresh install. Used when data/db.json does not exist,
 // or when you run `npm run reset`.
 //
-// Based on public listings for Petrichor House Kakamega (Shiyunzu, Kakamega–Mumias Road):
-// self-contained garden-view studios on bed & breakfast, a restaurant and pizzeria, and an outdoor bar.
+// Based on The Petrichor Kakamega (Shiyunzu, Kakamega–Mumias Road): self-contained garden-view
+// studios on bed & breakfast, a restaurant with grill and pizzeria, a garden, a terrace and a rooftop bar.
 // Room count, rates and menu prices are placeholders: change them in the staff dashboard.
 
 const roomTypes = [
@@ -11,30 +11,30 @@ const roomTypes = [
     name: 'Deluxe Double Studio, Garden View',
     tagline: 'Self-contained, quiet, and looking onto the garden',
     description:
-      'Each studio is individually furnished and fully self-contained: a double bed, a work desk, a sofa corner, wooden cabinetry and a kitchenette, with a private shower room and a view over the garden. Breakfast, cooked to order, is included every morning.',
+      'Bright, white and fully self-contained: a queen bed with an upholstered headboard, a navy sofa and coffee table, a work desk, and a pine-wood kitchenette with fridge and kettle, all under black steel-framed windows that look onto the lawn. Breakfast, cooked to order, is included every morning.',
     price: 7500,
     capacity: 2,
     size: 28,
-    bed: '1 double bed',
+    bed: '1 queen bed',
     view: 'Garden',
-    amenities: ['Breakfast included', 'Kitchenette', 'Work desk', 'Smart TV', 'Free Wi-Fi', 'Private shower', 'Free toiletries', 'Bottled water', 'Daily housekeeping'],
-    palette: ['#3f6b4a', '#c9c3b8'],
+    amenities: ['Breakfast included', 'Kitchenette', 'Fridge', 'Work desk', 'Sofa lounge', 'Smart TV', 'Free Wi-Fi', 'Private shower', 'Free toiletries', 'Daily housekeeping'],
+    palette: ['#3b7a2a', '#e8e6e1'],
   },
 ];
 
 const rooms = ['S1', 'S2', 'S3', 'S4'].map((n) => ({ id: `room-${n}`, number: n, typeId: 'rt-studio', status: 'active' }));
 
 const tables = [
-  { id: 't-1', name: 'T1', capacity: 2, area: 'Dining Hall', active: true },
-  { id: 't-2', name: 'T2', capacity: 2, area: 'Dining Hall', active: true },
-  { id: 't-3', name: 'T3', capacity: 4, area: 'Dining Hall', active: true },
-  { id: 't-4', name: 'T4', capacity: 4, area: 'Dining Hall', active: true },
-  { id: 't-5', name: 'T5', capacity: 6, area: 'Dining Hall', active: true },
-  { id: 't-6', name: 'G1', capacity: 4, area: 'Garden Terrace', active: true },
-  { id: 't-7', name: 'G2', capacity: 4, area: 'Garden Terrace', active: true },
-  { id: 't-8', name: 'G3', capacity: 8, area: 'Garden Terrace', active: true },
-  { id: 't-9', name: 'B1', capacity: 2, area: 'Outdoor Bar', active: true },
-  { id: 't-10', name: 'B2', capacity: 2, area: 'Outdoor Bar', active: true },
+  { id: 't-1', name: 'R1', capacity: 2, area: 'Rooftop Bar', active: true },
+  { id: 't-2', name: 'R2', capacity: 2, area: 'Rooftop Bar', active: true },
+  { id: 't-3', name: 'R3', capacity: 4, area: 'Rooftop Bar', active: true },
+  { id: 't-4', name: 'R4', capacity: 4, area: 'Rooftop Bar', active: true },
+  { id: 't-5', name: 'T1', capacity: 4, area: 'Terrace', active: true },
+  { id: 't-6', name: 'T2', capacity: 4, area: 'Terrace', active: true },
+  { id: 't-7', name: 'G1', capacity: 4, area: 'Garden', active: true },
+  { id: 't-8', name: 'G2', capacity: 4, area: 'Garden', active: true },
+  { id: 't-9', name: 'G3', capacity: 6, area: 'Garden', active: true },
+  { id: 't-10', name: 'G4', capacity: 8, area: 'Garden', active: true },
 ];
 
 let m = 0;
@@ -55,12 +55,19 @@ const menu = [
   item('Breakfast', 'Pancakes & Fruit', 'Stack of pancakes with honey and seasonal fruit.', 500, ['Vegetarian']),
   item('Breakfast', 'Mandazi & Masala Chai', 'Two fresh mandazi with a pot of spiced chai.', 250, ['Vegetarian']),
 
+  item('Grill & Burgers', 'Beef Kebabs', 'Three skewers of marinated beef with peppers and onion, char-grilled. Served with fries or ugali.', 950, ['House favourite']),
+  item('Grill & Burgers', 'Chicken Tikka Kebabs', 'Yoghurt-and-spice chicken with peppers and mushroom, off the grill.', 900),
+  item('Grill & Burgers', 'The Petrichor Double Burger', 'Two beef patties, cheese, lettuce and tomato in a sesame bun, with sweet potato fries and greens.', 1250, ['Signature']),
+  item('Grill & Burgers', 'Classic Beef Burger', 'Single beef patty, cheese, lettuce, tomato and house sauce, with fries.', 950),
+  item('Grill & Burgers', 'Crispy Chicken Burger', 'Fried chicken fillet, slaw and chilli mayo, with fries.', 900),
+  item('Grill & Burgers', 'Sweet Potato Fries', 'With a smoky tomato dip.', 350, ['Vegetarian']),
+
   item('Pizzeria', 'Margherita', 'Tomato, mozzarella and basil. Simple and perfect.', 900, ['Vegetarian']),
   item('Pizzeria', 'Veggie Garden', 'Peppers, onion, mushroom, sweetcorn and olives.', 1100, ['Vegetarian']),
   item('Pizzeria', 'Hawaiian', 'Ham and pineapple.', 1200),
   item('Pizzeria', 'Chicken Tikka', 'Tikka-spiced chicken, red onion, green chilli and coriander.', 1300, ['Spicy']),
   item('Pizzeria', 'BBQ Beef', 'Smoky BBQ sauce, minced beef, onion and peppers.', 1400),
-  item('Pizzeria', 'Petrichor Special', 'Chicken, beef, mushroom, peppers and extra cheese. Our signature pie.', 1600, ['Signature']),
+  item('Pizzeria', 'Petrichor Special', 'Chicken, beef, mushroom, peppers and extra cheese.', 1600),
 
   item('Mains', 'Kienyeji Chicken', 'Slow-cooked free-range chicken (quarter) with ugali or chips and greens.', 1100, ['Local']),
   item('Mains', 'Whole Fried Tilapia', 'Lake Victoria tilapia, wet or dry fry, with ugali and sukuma wiki.', 1200, ['Local']),
@@ -80,7 +87,7 @@ const menu = [
   item('Drinks', 'Masala Chai', 'Spiced Kenyan tea with milk.', 150),
   item('Drinks', 'Fresh Juice', 'Passion, mango or pineapple.', 250, ['Vegan']),
   item('Drinks', 'Soda (500ml)', 'Coke, Fanta, Sprite or Stoney.', 100),
-  item('Drinks', 'Tusker Lager', 'Ice cold from the outdoor bar.', 300, ['18+'], false),
+  item('Drinks', 'Tusker Lager', 'Ice cold from the rooftop bar.', 300, ['18+'], false),
   item('Drinks', 'House Wine (glass)', 'Red or white.', 500, ['18+'], false),
 ];
 

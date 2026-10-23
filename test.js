@@ -7,6 +7,8 @@ const path = require('path');
 process.env.DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'petrichor-'));
 const server = require('./server');
 
+const seedMenu = require('./seed')().menu;
+const menuId = (name) => seedMenu.find((m) => m.name === name).id;
 const day = (n) => new Date(Date.now() + 3 * 36e5 + n * 864e5).toISOString().slice(0, 10);
 
 server.listen(0, async () => {
@@ -38,9 +40,9 @@ server.listen(0, async () => {
     assert.deepEqual(r.data.types[0].free, [0, 0, 3]); ok('calendar shows studios full, then 3 open');
 
     r = await call('GET', `/api/dining/availability?date=${day(1)}&party=8`);
-    assert(r.data.every((s) => s.open === 1)); ok('only the garden terrace long table fits 8');
+    assert(r.data.every((s) => s.open === 1)); ok('only the long garden table fits 8');
     r = await call('POST', '/api/reservations', { date: day(1), time: '19:00', partySize: 8, name: 'Big', phone: '07' });
-    assert.equal(r.status, 201); assert.equal(r.data.tableName, 'G3'); ok('long table reserved');
+    assert.equal(r.status, 201); assert.equal(r.data.tableName, 'G4'); ok('long garden table reserved');
     r = await call('POST', '/api/reservations', { date: day(1), time: '20:00', partySize: 8, name: 'Big2', phone: '07' });
     assert.equal(r.status, 409); ok('table held for the 90-minute seating');
     r = await call('POST', '/api/reservations', { date: day(1), time: '20:30', partySize: 8, name: 'Big3', phone: '07' });
@@ -48,13 +50,13 @@ server.listen(0, async () => {
 
     r = await call('GET', `/api/delivery/slots?date=${day(1)}`);
     assert.deepEqual(r.data.slots.map((s) => s.time), ['09:00', '12:00', '15:00', '18:00', '21:00']); ok('delivery runs every 3 hours');
-    r = await call('POST', '/api/orders', { date: day(1), slot: '12:00', name: 'A', phone: '07', destinationType: 'address', address: 'Milimani, Kakamega', items: [{ id: 'm-10', qty: 1 }] });
+    r = await call('POST', '/api/orders', { date: day(1), slot: '12:00', name: 'A', phone: '07', destinationType: 'address', address: 'Milimani, Kakamega', items: [{ id: menuId('Petrichor Special'), qty: 1 }] });
     assert.equal(r.status, 201); assert.equal(r.data.total, 1600 + 200); ok('address delivery charged the fee');
-    r = await call('POST', '/api/orders', { date: day(1), slot: '12:00', name: 'A', phone: '07', destinationType: 'room', room: '999', items: [{ id: 'm-10', qty: 1 }] });
+    r = await call('POST', '/api/orders', { date: day(1), slot: '12:00', name: 'A', phone: '07', destinationType: 'room', room: '999', items: [{ id: menuId('Petrichor Special'), qty: 1 }] });
     assert.equal(r.status, 400); ok('unknown room refused');
-    r = await call('POST', '/api/orders', { date: day(1), slot: '12:00', name: 'A', phone: '07', destinationType: 'room', room: 'S1', items: [{ id: 'm-26', qty: 1 }] });
+    r = await call('POST', '/api/orders', { date: day(1), slot: '12:00', name: 'A', phone: '07', destinationType: 'room', room: 'S1', items: [{ id: menuId('Tusker Lager'), qty: 1 }] });
     assert.equal(r.status, 400); ok('alcohol not deliverable');
-    r = await call('POST', '/api/orders', { date: day(-1), slot: '12:00', name: 'A', phone: '07', destinationType: 'room', room: 'S1', items: [{ id: 'm-10', qty: 1 }] });
+    r = await call('POST', '/api/orders', { date: day(-1), slot: '12:00', name: 'A', phone: '07', destinationType: 'room', room: 'S1', items: [{ id: menuId('Petrichor Special'), qty: 1 }] });
     assert.equal(r.status, 400); ok('past runs closed');
 
     r = await call('GET', '/api/admin/overview');
@@ -75,9 +77,9 @@ server.listen(0, async () => {
     assert.equal(r.data.status, 'cancelled'); ok('admin cancels a booking');
     r = await call('PUT', '/api/admin/delivery-config', { slots: '06:00, 09:00, 12:00, 15:00, 18:00, 21:00' }, token);
     assert.equal(r.data.slots.length, 6); ok('admin edits delivery runs');
-    r = await call('PUT', '/api/admin/menu/m-1', { available: false }, token);
+    r = await call('PUT', `/api/admin/menu/${menuId('Beef Kebabs')}`, { available: false }, token);
     r = await call('GET', '/api/menu');
-    assert(!r.data.find((m) => m.id === 'm-1')); ok('hidden dish leaves the menu');
+    assert(!r.data.find((m) => m.name === 'Beef Kebabs')); ok('hidden dish leaves the menu');
 
     console.log('\nAll tests passed.');
   } catch (e) {

@@ -1,12 +1,12 @@
-# Petrichor House · Kakamega
+# The Petrichor · Kakamega
 
-A website for Petrichor House Kakamega, a boutique guest house in Shiyunzu on the Kakamega–Mumias Road, about 3 km from Kakamega town. It has garden-view studios on bed & breakfast, a restaurant and pizzeria, and an outdoor bar.
+A website for The Petrichor Kakamega, a boutique guest house in Shiyunzu on the Kakamega–Mumias Road, about 3 km from Kakamega town. It has garden-view studios on bed & breakfast, a restaurant with grill and pizzeria, a garden, a terrace and a rooftop bar.
 
 **Guests can:**
 - Browse the garden-view studios (self-contained, breakfast included)
 - See a live 14-day availability grid of open nights and book a room (the system assigns a free room and refuses double bookings)
-- Reserve a table in the dining hall, garden terrace or outdoor bar, picking from open seating times for their party size
-- Read the full menu (breakfast, pizzeria, Kenyan mains, drinks) with prices in KES
+- Reserve a table in the garden, on the terrace or at the rooftop bar, picking from open seating times for their party size
+- Read the full menu (breakfast, grill & burgers, pizzeria, Kenyan mains, drinks) with prices in KES
 - Order food delivery to their room (free) or a Kakamega address (KES 200 fee) on runs that leave every 3 hours: 09:00, 12:00, 15:00, 18:00, 21:00
 - Look up a booking or delivery by reference
 
@@ -43,11 +43,9 @@ Settings come from environment variables:
 
 All times use Kenya time (EAT, UTC+3).
 
-## Adding real photos
+## Photos
 
-Put photos in `public/photos/` with these names and they appear on the site automatically, with no code changes:
-`exterior.jpg` (also used behind the homepage heading), `studio.jpg`, `dining.jpg`, `bar.jpg`, `garden.jpg`, `pizza.jpg`.
-Until then the site uses drawn artwork.
+The hotel's photos are in `public/photos/` (see the README there for which file goes where). Replace a file with the same name to change a photo, with no code changes.
 
 Room count, nightly rate and menu prices are placeholders. Change them in the staff dashboard.
 
