@@ -1,0 +1,14 @@
+{
+  "name": "the-petrichor",
+  "version": "1.0.0",
+  "description": "Five-star hotel website for The Petrichor, Kakamega: room reservations, live availability, restaurant tables, KES menu, 3-hourly food delivery and a staff dashboard.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "reset": "node server.js --reset",
+    "test": "node test.js"
+  },
+  "engines": { "node": ">=18" },
+  "license": "UNLICENSED",
+  "private": true
+}

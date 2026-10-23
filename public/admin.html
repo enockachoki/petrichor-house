@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Petrichor Staff Dashboard</title>
+  <meta name="robots" content="noindex" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230e1a15'/%3E%3Cpath d='M32 12c8 12 14 20 14 28a14 14 0 0 1-28 0c0-8 6-16 14-28z' fill='%23b08d57'/%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500&family=Jost:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+  <style>
+    body { background: #f1ede4; }
+    .login { min-height: 100vh; display: grid; place-items: center; background: var(--forest); padding: 16px; }
+    .login .panel { width: min(400px, 100%); }
+    .shell { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
+    aside { background: var(--forest); color: var(--cream); padding: 28px 18px; position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; gap: 4px; }
+    aside .brand { margin-bottom: 28px; font-size: 1.3rem; display: block; line-height: 1.3; }
+    aside .brand small { margin-top: 6px; }
+    aside button.navi { text-align: left; background: none; border: 0; color: rgba(244,239,228,.75); padding: 11px 14px; border-radius: var(--radius); cursor: pointer; letter-spacing: .12em; text-transform: uppercase; font-size: .72rem; }
+    aside button.navi.active, aside button.navi:hover { background: rgba(176,141,87,.18); color: var(--brass-2); }
+    aside .spacer { flex: 1; }
+    main { padding: clamp(18px, 3vw, 40px); min-width: 0; }
+    main h1 { font-size: 2.6rem; margin-bottom: 6px; }
+    .sub { color: var(--muted); margin: 0 0 26px; }
+    .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 28px; }
+    .kpi { background: #fff; border-radius: var(--radius); padding: 20px; border: 1px solid var(--line); }
+    .kpi span { font-size: .68rem; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); }
+    .kpi b { display: block; font-family: var(--serif); font-size: 2.4rem; font-weight: 400; color: var(--moss); }
+    .card { background: #fff; border-radius: var(--radius); border: 1px solid var(--line); padding: 20px; margin-bottom: 22px; overflow-x: auto; }
+    .card h3 { font-size: 1.5rem; margin-bottom: 14px; }
+    .two { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+    table.data { width: 100%; border-collapse: collapse; font-size: .9rem; }
+    table.data th { text-align: left; font-weight: 500; font-size: .66rem; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); padding: 10px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+    table.data td { padding: 10px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+    table.data input, table.data select { padding: 7px 9px; border: 1px solid var(--line); border-radius: var(--radius); background: #fff; width: 100%; min-width: 70px; }
+    .pill { display: inline-block; padding: 3px 10px; border-radius: 99px; font-size: .7rem; letter-spacing: .08em; text-transform: uppercase; background: #eee; white-space: nowrap; }
+    .pill.confirmed, .pill.received, .pill.active { background: #e3efe3; color: #2e6a3b; }
+    .pill.checked_in, .pill.seated, .pill.preparing, .pill.out_for_delivery { background: #f6ecd8; color: #8a5f1d; }
+    .pill.cancelled, .pill.no_show, .pill.maintenance { background: #f4dfdc; color: #8c3a31; }
+    .pill.checked_out, .pill.completed, .pill.delivered { background: #e6e9ec; color: #4b5560; }
+    .row-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+    .mini { padding: 6px 10px; font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; border: 1px solid var(--line); background: var(--paper); border-radius: var(--radius); cursor: pointer; white-space: nowrap; }
+    .mini:hover { border-color: var(--brass); }
+    .mini.danger { color: var(--bad); }
+    .mini.primary { background: var(--forest); color: var(--cream); border-color: var(--forest); }
+    .filters { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; align-items: end; }
+    .filters .field { min-width: 160px; }
+    .addform { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; align-items: end; margin-top: 16px; padding-top: 16px; border-top: 1px dashed var(--line); }
+    .admin-cal .cal th, .admin-cal .cal td button { color: var(--ink); }
+    .admin-cal .cal thead th, .admin-cal .cal thead th b { color: var(--ink); }
+    .admin-cal .cal-wrap, .admin-cal .cal th, .admin-cal .cal td { border-color: var(--line); }
+    .admin-cal .cal td button { border-left-color: var(--line); }
+    .admin-cal .cal tbody th small { color: var(--brass); }
+    .admin-cal .cal td button.full { color: var(--bad); }
+    @media (max-width: 860px) {
+      .shell { grid-template-columns: 1fr; }
+      aside { position: static; height: auto; flex-direction: row; flex-wrap: wrap; padding: 14px; }
+      aside .brand { width: 100%; margin-bottom: 8px; }
+      aside .spacer { display: none; }
+      .two { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="login" id="login">
+    <form class="panel" id="loginForm">
+      <p class="eyebrow">Staff only</p>
+      <h4 style="font-size:2rem;margin:8px 0 20px">The Petrichor dashboard</h4>
+      <label class="field">Password<input type="password" name="password" required autofocus /></label>
+      <button class="btn" style="width:100%;margin-top:18px">Sign in</button>
+      <div class="error" id="loginError"></div>
+      <p style="margin-top:18px;font-size:.85rem"><a href="/">← Back to the website</a></p>
+    </form>
+  </div>
+
+  <div class="shell" id="shell" style="display:none">
+    <aside>
+      <div class="brand">THE PETRICHOR<small>Staff dashboard</small></div>
+      <button class="navi" data-view="overview">Overview</button>
+      <button class="navi" data-view="calendar">Room availability</button>
+      <button class="navi" data-view="bookings">Room bookings</button>
+      <button class="navi" data-view="rooms">Rooms &amp; rates</button>
+      <button class="navi" data-view="reservations">Table bookings</button>
+      <button class="navi" data-view="tables">Tables</button>
+      <button class="navi" data-view="orders">Delivery orders</button>
+      <button class="navi" data-view="menu">Menu &amp; prices</button>
+      <button class="navi" data-view="delivery">Delivery settings</button>
+      <div class="spacer"></div>
+      <a class="navi" href="/" style="color:rgba(244,239,228,.6);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;padding:11px 14px;text-decoration:none">View website</a>
+      <button class="navi" id="logout">Sign out</button>
+    </aside>
+    <main id="view"></main>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <script src="/admin.js"></script>
+</body>
+</html>

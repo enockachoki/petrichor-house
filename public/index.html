@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>The Petrichor · Kakamega</title>
+  <meta name="description" content="The Petrichor, a five-star rainforest retreat in Shiyunzu, Kakamega. Reserve suites, dine at Mvua, and order in-room dining every three hours." />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230e1a15'/%3E%3Cpath d='M32 12c8 12 14 20 14 28a14 14 0 0 1-28 0c0-8 6-16 14-28z' fill='%23b08d57'/%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <nav class="nav" id="nav">
+    <div class="container">
+      <a href="#top" class="brand">
+        <svg width="26" height="26" viewBox="0 0 64 64" aria-hidden="true"><path d="M32 6c9 14 16 23 16 33a16 16 0 0 1-32 0c0-10 7-19 16-33z" fill="none" stroke="#b08d57" stroke-width="3"/><path d="M32 26v28M32 38l-8-7M32 44l8-7" stroke="#b08d57" stroke-width="2.5" fill="none"/></svg>
+        <span>THE PETRICHOR<small>Kakamega · Kenya</small></span>
+      </a>
+      <button class="menu-toggle" id="menuToggle" aria-label="Open menu">Menu</button>
+      <div class="nav-links" id="navLinks">
+        <a href="#stay">Stay</a>
+        <a href="#availability">Availability</a>
+        <a href="#dine">Dine</a>
+        <a href="#menu">Menu</a>
+        <a href="#delivery">Delivery</a>
+        <a href="#discover">Discover</a>
+        <a href="#manage">My booking</a>
+        <button class="btn small" data-open-booking>Reserve</button>
+      </div>
+    </div>
+  </nav>
+
+  <header class="hero" id="top">
+    <canvas id="rain" aria-hidden="true"></canvas>
+    <svg class="canopy" viewBox="0 0 1440 400" preserveAspectRatio="none" aria-hidden="true">
+      <path fill="#0a1410" d="M0 260c60-40 110-60 170-40s90-60 160-70 110 50 170 30 80-90 160-90 110 80 180 60 100-70 170-60 90 60 160 40 90-50 140-40 80 40 130 30v280H0z"/>
+      <path fill="#07100c" opacity=".9" d="M0 320c80-30 140-10 200-30s120-50 200-30 120 40 200 20 140-60 220-40 120 50 200 30 140-40 220-20 120 20 200 0v150H0z"/>
+    </svg>
+    <div class="container hero-inner">
+      <div class="stars">★★★★★</div>
+      <p class="eyebrow" style="margin-top:14px">A rainforest retreat in Shiyunzu, Kakamega</p>
+      <h1>The scent of <em>first rain</em></h1>
+      <p class="lede">Petrichor is the earthy perfume of rain on dry ground. In Kakamega, home of Kenya's last tropical rainforest, it arrives most afternoons. We built a house around it.</p>
+      <form class="booking-bar" id="heroSearch">
+        <label>Arrive<input type="date" name="checkIn" required /></label>
+        <label>Depart<input type="date" name="checkOut" required /></label>
+        <label>Guests
+          <select name="guests"><option>1</option><option selected>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select>
+        </label>
+        <button class="btn" type="submit">Check availability</button>
+      </form>
+    </div>
+    <div class="scroll-hint">Scroll</div>
+  </header>
+
+  <section class="section">
+    <div class="container story reveal">
+      <div>
+        <p class="eyebrow">Our house</p>
+        <h2>Individually furnished rooms, a garden that drinks the rain, and breakfast cooked the moment you want it.</h2>
+        <p>Set on quiet lawns in Shiyunzu, five minutes from Muliro Gardens and twenty from Kakamega Forest, The Petrichor pairs the warmth of a Luhya homestead with the polish of a grand hotel. Every stay includes a cooked-to-order breakfast, butler-led arrivals and fibre Wi-Fi throughout.</p>
+        <div class="facts">
+          <div><strong>17</strong><span>Rooms &amp; villas</span></div>
+          <div><strong>24h</strong><span>Front desk</span></div>
+          <div><strong>3h</strong><span>Delivery runs</span></div>
+        </div>
+      </div>
+      <div class="story-art">
+        <svg viewBox="0 0 400 500" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          <defs><linearGradient id="sg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3d5f4a"/><stop offset="1" stop-color="#0e1a15"/></linearGradient></defs>
+          <rect width="400" height="500" fill="url(#sg)"/>
+          <g fill="#0b1511" opacity=".85">
+            <ellipse cx="60" cy="140" rx="110" ry="80"/><ellipse cx="340" cy="110" rx="120" ry="90"/><ellipse cx="200" cy="60" rx="140" ry="70"/>
+          </g>
+          <rect x="70" y="250" width="260" height="170" fill="#e9dfc9" opacity=".9"/>
+          <polygon points="50,255 200,180 350,255" fill="#1b2a22"/>
+          <rect x="110" y="300" width="50" height="70" fill="#d4b47c" opacity=".85"/><rect x="240" y="300" width="50" height="70" fill="#d4b47c" opacity=".85"/>
+          <rect x="180" y="320" width="40" height="100" fill="#2f4a3a"/>
+          <rect y="420" width="400" height="80" fill="#2f4a3a"/>
+          <g stroke="#f4efe4" stroke-opacity=".35" stroke-width="1.2">
+            <line x1="40" y1="20" x2="32" y2="60"/><line x1="120" y1="80" x2="112" y2="120"/><line x1="260" y1="30" x2="252" y2="70"/><line x1="350" y1="200" x2="342" y2="240"/><line x1="20" y1="300" x2="12" y2="340"/><line x1="370" y1="330" x2="362" y2="370"/><line x1="190" y1="130" x2="182" y2="170"/>
+          </g>
+        </svg>
+        <div class="caption">"Arrive dusty. Leave rinsed."</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="stay" style="padding-top:0">
+    <div class="container">
+      <div class="section-head reveal">
+        <div><p class="eyebrow">Stay</p><h2>Rooms &amp; suites</h2></div>
+        <p>From our garden-view signature rooms to the two-bedroom Isukha Villa with its own plunge pool. Check-in from 2:00 pm, check-out by 10:30 am.</p>
+      </div>
+      <div class="rooms-grid" id="roomsGrid"></div>
+    </div>
+  </section>
+
+  <section class="section dark" id="availability">
+    <div class="container">
+      <div class="section-head reveal">
+        <div><p class="eyebrow">Live availability</p><h2>Open nights</h2></div>
+        <div class="cal-tools">
+          <button class="btn ghost small" id="calPrev">← Earlier</button>
+          <input type="date" id="calStart" class="btn ghost small" style="color-scheme:dark" />
+          <button class="btn ghost small" id="calNext">Later →</button>
+        </div>
+      </div>
+      <div class="cal-wrap reveal"><table class="cal" id="calendar"></table></div>
+      <div class="legend">
+        <span><i style="background:rgba(79,138,91,.6)"></i>Plenty open</span>
+        <span><i style="background:rgba(181,131,59,.7)"></i>Last rooms</span>
+        <span><i style="background:rgba(166,73,63,.5)"></i>Fully booked</span>
+        <span>Tap any open night to start a reservation.</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="dine">
+    <div class="container dining">
+      <div class="dining-intro reveal">
+        <p class="eyebrow">Mvua · Restaurant &amp; Fireside Bar</p>
+        <h3>Western Kenya, plated with ceremony</h3>
+        <p><em>Mvua</em> means rain in Swahili. Our kitchen cooks with what grows within a day's drive: kienyeji chicken from Isukha farms, tilapia and omena from Lake Victoria, forest honey, and the traditional greens our grandmothers called tsisaka and managu.</p>
+        <ul class="hours" id="hours"></ul>
+      </div>
+      <div class="panel reveal" id="tablePanel">
+        <h4>Reserve a table</h4>
+        <div class="grid-2">
+          <label class="field">Date<input type="date" id="tDate" /></label>
+          <label class="field">Guests
+            <select id="tParty"></select>
+          </label>
+        </div>
+        <div id="tSlots"></div>
+        <form id="tForm" style="display:none;margin-top:22px">
+          <div class="grid-2">
+            <label class="field">Full name<input name="name" required /></label>
+            <label class="field">Phone<input name="phone" required placeholder="+254…" /></label>
+          </div>
+          <label class="field" style="margin-top:14px">Email (optional)<input name="email" type="email" /></label>
+          <label class="field" style="margin-top:14px">Occasion or dietary notes<textarea name="notes"></textarea></label>
+          <div class="actions"><span id="tPick" class="empty"></span><button class="btn" type="submit">Confirm table</button></div>
+          <div class="error" id="tError"></div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <section class="section dark" id="menu">
+    <div class="container">
+      <div class="section-head reveal">
+        <div><p class="eyebrow">The menu</p><h2>À la carte</h2></div>
+        <p>All prices in Kenya shillings, inclusive of VAT and service. Ask your server about the day's catch.</p>
+      </div>
+      <div class="tabs" id="menuTabs"></div>
+      <div class="menu-list" id="menuList"></div>
+    </div>
+  </section>
+
+  <section class="section" id="delivery">
+    <div class="container">
+      <div class="section-head reveal">
+        <div><p class="eyebrow">In-room &amp; Kakamega delivery</p><h2>Every three hours</h2></div>
+        <p id="deliveryIntro">Our kitchen sends a delivery run every three hours through the day. Free to your room, a small fee anywhere in Kakamega town.</p>
+      </div>
+      <div class="grid-2" style="max-width:420px;margin-bottom:18px">
+        <div class="seg" id="dDay"></div>
+      </div>
+      <div class="slots-row" id="dSlots"></div>
+      <div class="delivery-grid">
+        <div class="order-menu" id="orderMenu"></div>
+        <div class="panel basket">
+          <h4>Your order</h4>
+          <ul class="basket-lines" id="basketLines"></ul>
+          <div class="totals" id="totals"></div>
+          <form id="oForm">
+            <div class="seg" id="destSeg" style="margin-bottom:14px">
+              <button type="button" data-dest="room" class="active">To my room</button>
+              <button type="button" data-dest="address">Kakamega address</button>
+            </div>
+            <label class="field" id="roomField">Room number<input name="room" placeholder="e.g. 104" /></label>
+            <label class="field" id="addrField" style="display:none">Delivery address<textarea name="address" placeholder="Estate, building, landmark"></textarea></label>
+            <div class="grid-2" style="margin-top:14px">
+              <label class="field">Name<input name="name" required /></label>
+              <label class="field">Phone<input name="phone" required placeholder="+254…" /></label>
+            </div>
+            <label class="field" style="margin-top:14px">Notes<input name="notes" placeholder="Allergies, cutlery, gate code" /></label>
+            <button class="btn" style="width:100%;margin-top:18px" type="submit" id="oSubmit">Place order</button>
+            <div class="error" id="oError"></div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section dark" id="discover">
+    <div class="container">
+      <div class="section-head reveal">
+        <div><p class="eyebrow">Discover</p><h2>Around Kakamega</h2></div>
+        <p>Our concierge arranges guides, drivers and picnic hampers for every outing.</p>
+      </div>
+      <div class="exp-grid">
+        <div class="exp reveal"><span class="num">01</span><h4>Kakamega Forest at dawn</h4><p style="color:rgba(244,239,228,.65)">Walk with a resident guide among colobus monkeys and 300+ bird species to the Lirhanda Hill sunrise.</p><span class="dist" style="color:var(--brass-2)">30 min drive</span></div>
+        <div class="exp reveal"><span class="num">02</span><h4>Crying Stone of Ilesi</h4><p style="color:rgba(244,239,228,.65)">The famous weeping rock on the Kisumu road, with the legends that come with it.</p><span class="dist" style="color:var(--brass-2)">15 min drive</span></div>
+        <div class="exp reveal"><span class="num">03</span><h4>Muliro Gardens</h4><p style="color:rgba(244,239,228,.65)">Kakamega's botanical park for a slow afternoon. We pack the hamper and the chai.</p><span class="dist" style="color:var(--brass-2)">5 min drive</span></div>
+        <div class="exp reveal"><span class="num">04</span><h4>Isukha culture day</h4><p style="color:rgba(244,239,228,.65)">Isukuti drumming, a homestead lunch of ingokho and obusuma, and a visit to the Nabongo Cultural Centre.</p><span class="dist" style="color:var(--brass-2)">Full day</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section dark" id="manage" style="background:var(--forest-2)">
+    <div class="container">
+      <p class="eyebrow">Manage</p>
+      <h2 style="font-size:clamp(2rem,4vw,3rem);margin:12px 0 24px">Find my booking</h2>
+      <form class="lookup" id="lookupForm">
+        <input name="ref" placeholder="PH… · TB… · DL…" required />
+        <button class="btn" type="submit">Look up</button>
+      </form>
+      <div class="lookup-result" id="lookupResult"></div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container">
+      <div class="foot-grid">
+        <div>
+          <div class="brand" style="color:var(--cream)">THE PETRICHOR</div>
+          <p style="margin-top:14px;max-width:320px">A five-star rainforest retreat in the green heart of western Kenya.</p>
+        </div>
+        <div><h5>Find us</h5><p>Shiyunzu, Kakamega</p><p>Kakamega County, Kenya</p><p>18 min from Kakamega Airport</p></div>
+        <div><h5>Times</h5><p>Check-in from 14:00</p><p>Check-out by 10:30</p><p>Front desk 24 hours</p></div>
+        <div><h5>Reach us</h5><p>reservations@thepetrichor.example</p><p>+254 700 000 000</p><p><a href="/admin">Staff dashboard</a></p></div>
+      </div>
+      <div class="foot-base"><span>© <span id="year"></span> The Petrichor, Kakamega</span><span>Inspired by Petrichor House Kakamega</span></div>
+    </div>
+  </footer>
+
+  <div class="modal" id="bookingModal" role="dialog" aria-modal="true" aria-labelledby="bkTitle">
+    <div class="modal-backdrop" data-close></div>
+    <div class="modal-card">
+      <button class="modal-close" data-close aria-label="Close">×</button>
+      <div class="steps"><span class="on"></span><span></span><span></span></div>
+      <p class="eyebrow">Reserve your stay</p>
+      <h3 id="bkTitle">Choose your dates</h3>
+      <div id="bkBody"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <script src="/app.js"></script>
+</body>
+</html>
