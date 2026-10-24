@@ -22,11 +22,12 @@
       <div class="nav-links" id="navLinks">
         <a href="#gallery">Gallery</a>
         <a href="#food">Food</a>
-        <a href="#stay">Rooms</a>
-        <a href="#dine">Tables</a>
-        <a href="#events">Events</a>
+        <a href="#delivery">Order</a>
         <a href="#menu">Menu</a>
-        <a href="#contact">Contact</a>
+        <a href="#dine">Tables</a>
+        <a href="#stay">Rooms</a>
+        <a href="#events">Grounds</a>
+        <a href="/track.html">Track order</a>
         <button class="btn small" data-open-booking>Reserve</button>
       </div>
     </div>
@@ -125,6 +126,7 @@
           <a class="btn" href="tel:+254796306263"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1A17 17 0 0 1 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1z"/></svg>Call now</a>
           <a class="btn wa" href="https://wa.me/254796306263?text=Hello%20The%20Petrichor%2C%20I%27d%20like%20to%20order%20food." target="_blank" rel="noopener"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2c-1.5 0-3-.4-4.3-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2c0 1.3.9 2.5 1 2.7.1.2 1.8 2.8 4.4 3.9 1.6.7 2.3.8 3.1.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.1-1.2l-.6-.3z"/></svg>WhatsApp order</a>
           <a class="btn ghost" href="#delivery">Order online for delivery</a>
+          <a class="btn ghost" href="/track.html">Track my order</a>
         </div>
         <ul class="contact-facts">
           <li><span>Kitchen</span>07:30 – 22:00 daily</li>
@@ -163,7 +165,8 @@
               <label class="field">Phone<input name="phone" required placeholder="+254…" /></label>
             </div>
             <label class="field" style="margin-top:14px">Notes<input name="notes" placeholder="Allergies, cutlery, gate code" /></label>
-            <button class="btn" style="width:100%;margin-top:18px" type="submit" id="oSubmit">Place order</button>
+            <button class="btn" style="width:100%;margin-top:18px" type="submit" id="oSubmit">Place order &amp; pay with M-Pesa</button>
+            <p class="pay-note">Your order goes to the kitchen once it's paid. We'll ask which M-Pesa number to send the prompt to.</p>
             <div class="error" id="oError"></div>
           </form>
         </div>
@@ -171,7 +174,54 @@
     </div>
   </section>
 
-  <section class="section" id="stay">
+  <section class="section dark" id="menu">
+    <div class="container">
+      <div class="section-head reveal">
+        <div><p class="eyebrow">The full menu</p><h2>À la carte</h2></div>
+        <p>All prices in Kenya shillings, inclusive of VAT. Breakfast is included for staying guests.</p>
+      </div>
+      <div class="tabs" id="menuTabs"></div>
+      <div class="menu-list" id="menuList"></div>
+    </div>
+  </section>
+
+  <section class="section" id="dine">
+    <div class="container dining">
+      <div class="dining-intro reveal">
+        <p class="eyebrow">Restaurant · Grill · Rooftop Bar</p>
+        <h3>Off the grill, up on the roof</h3>
+        <p>Take a table on the lawn among the garden chairs, under the maroon umbrellas on the terrace, or up at the glass-roofed rooftop bar with the match on the screen. The kitchen is known for its beef and chicken kebabs and stacked burgers with sweet potato fries, alongside wood-fired pizza and Kenyan favourites like kienyeji chicken and Lake Victoria tilapia.</p>
+        <ul class="hours" id="hours"></ul>
+      </div>
+      <div class="panel reveal" id="tablePanel">
+        <h4>Reserve a table</h4>
+        <div class="grid-2">
+          <label class="field">Date<input type="date" id="tDate" /></label>
+          <label class="field">Guests
+            <select id="tParty"></select>
+          </label>
+        </div>
+        <div id="tSlots"></div>
+        <form id="tForm" style="display:none;margin-top:22px">
+          <div class="grid-2">
+            <label class="field">Full name<input name="name" required /></label>
+            <label class="field">Phone<input name="phone" required placeholder="+254…" /></label>
+          </div>
+          <label class="field" style="margin-top:14px">Email (optional)<input name="email" type="email" /></label>
+          <label class="field" style="margin-top:14px">Occasion or dietary notes<textarea name="notes"></textarea></label>
+          <div class="preorder">
+            <h5>Pre-order to confirm <small>Required: add anything from the menu</small></h5>
+            <div class="preorder-pick"><select id="tItem" aria-label="Dish or drink"></select><button type="button" class="btn ghost small" id="tAdd">Add</button></div>
+            <ul class="preorder-lines" id="tLines"></ul>
+          </div>
+          <div class="actions"><span id="tPick" class="empty"></span><button class="btn" type="submit" id="tSubmit">Pay &amp; confirm table</button></div>
+          <div class="error" id="tError"></div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="stay" style="background:var(--concrete)">
     <div class="container">
       <div class="section-head reveal">
         <div><p class="eyebrow">Stay</p><h2>Garden studios</h2></div>
@@ -207,38 +257,7 @@
     </div>
   </section>
 
-  <section class="section" id="dine">
-    <div class="container dining">
-      <div class="dining-intro reveal">
-        <p class="eyebrow">Restaurant · Grill · Rooftop Bar</p>
-        <h3>Off the grill, up on the roof</h3>
-        <p>Take a table on the lawn among the garden chairs, under the maroon umbrellas on the terrace, or up at the glass-roofed rooftop bar with the match on the screen. The kitchen is known for its beef and chicken kebabs and stacked burgers with sweet potato fries, alongside wood-fired pizza and Kenyan favourites like kienyeji chicken and Lake Victoria tilapia.</p>
-        <ul class="hours" id="hours"></ul>
-      </div>
-      <div class="panel reveal" id="tablePanel">
-        <h4>Reserve a table</h4>
-        <div class="grid-2">
-          <label class="field">Date<input type="date" id="tDate" /></label>
-          <label class="field">Guests
-            <select id="tParty"></select>
-          </label>
-        </div>
-        <div id="tSlots"></div>
-        <form id="tForm" style="display:none;margin-top:22px">
-          <div class="grid-2">
-            <label class="field">Full name<input name="name" required /></label>
-            <label class="field">Phone<input name="phone" required placeholder="+254…" /></label>
-          </div>
-          <label class="field" style="margin-top:14px">Email (optional)<input name="email" type="email" /></label>
-          <label class="field" style="margin-top:14px">Occasion or dietary notes<textarea name="notes"></textarea></label>
-          <div class="actions"><span id="tPick" class="empty"></span><button class="btn" type="submit">Confirm table</button></div>
-          <div class="error" id="tError"></div>
-        </form>
-      </div>
-    </div>
-  </section>
-
-  <section class="section dark" id="events">
+  <section class="section dark" id="events" style="background:#0b0b0b">
     <div class="container">
       <div class="section-head reveal">
         <div><p class="eyebrow">Grounds &amp; venues</p><h2>Host your event</h2></div>
@@ -263,17 +282,6 @@
         </form>
         <div id="vDone"></div>
       </div>
-    </div>
-  </section>
-
-  <section class="section dark" id="menu" style="background:#0b0b0b">
-    <div class="container">
-      <div class="section-head reveal">
-        <div><p class="eyebrow">The full menu</p><h2>À la carte</h2></div>
-        <p>All prices in Kenya shillings, inclusive of VAT. Breakfast is included for staying guests.</p>
-      </div>
-      <div class="tabs" id="menuTabs"></div>
-      <div class="menu-list" id="menuList"></div>
     </div>
   </section>
 
@@ -336,6 +344,7 @@
   </div>
 
   <div class="toast" id="toast"></div>
+  <script src="/pay.js"></script>
   <script src="/app.js"></script>
 </body>
 </html>

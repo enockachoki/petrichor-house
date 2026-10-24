@@ -133,6 +133,7 @@ module.exports = function seed() {
     orders: [],
     venues,
     enquiries: [],
+    payments: [],
     deliveryConfig,
     diningConfig,
   };

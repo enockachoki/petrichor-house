@@ -36,6 +36,11 @@
     table.data td { padding: 10px; border-bottom: 1px solid var(--line); vertical-align: middle; }
     table.data input, table.data select { padding: 7px 9px; border: 1px solid var(--line); border-radius: var(--radius); background: #fff; width: 100%; min-width: 70px; }
     .pill { display: inline-block; padding: 3px 10px; border-radius: 99px; font-size: .7rem; letter-spacing: .08em; text-transform: uppercase; background: #eee; white-space: nowrap; }
+    .pill.paid { background: #dff0dc; color: #2a7d2e; }
+    .pill.unpaid, .pill.awaiting_payment, .pill.pending { background: #fbeedd; color: #9a5a12; }
+    .pill.failed { background: #f4dfdc; color: #8c3a31; }
+    .pill.on_site { background: #e6e9ec; color: #4b5560; }
+    .banner { background: #fbeedd; color: #6d4410; border-radius: 6px; padding: 12px 16px; margin: 0 0 20px; font-size: .92rem; }
     .pill.confirmed, .pill.received, .pill.active { background: #e3efe3; color: #2e6a3b; }
     .pill.checked_in, .pill.seated, .pill.preparing, .pill.out_for_delivery { background: #f6ecd8; color: #8a5f1d; }
     .pill.cancelled, .pill.no_show, .pill.maintenance { background: #f4dfdc; color: #8c3a31; }
@@ -87,6 +92,7 @@
       <button class="navi" data-view="enquiries">Event enquiries</button>
       <button class="navi" data-view="venues">Grounds &amp; venues</button>
       <button class="navi" data-view="orders">Delivery orders</button>
+      <button class="navi" data-view="payments">M-Pesa payments</button>
       <button class="navi" data-view="menu">Menu &amp; prices</button>
       <button class="navi" data-view="delivery">Delivery settings</button>
       <div class="spacer"></div>

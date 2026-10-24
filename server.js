@@ -6,6 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const seed = require('./seed');
+const mpesa = require('./mpesa');
 
 const PORT = Number(process.env.PORT) || 3000;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'petrichor-admin';
@@ -123,6 +124,7 @@ function createBooking(body) {
   if (!type) throw bad('Unknown room type');
   const guests = Number(body.guests) || 1;
   if (guests < 1 || guests > type.capacity) throw bad(`${type.name} sleeps up to ${type.capacity} guests`);
+  const payOption = body.payOption === 'now' ? 'now' : 'on_site';
   const [room] = freeRooms(type.id, checkIn, checkOut);
   if (!room) throw new HttpError(409, `Sorry, ${type.name} is fully booked for those dates`);
   const booking = {
@@ -143,6 +145,7 @@ function createBooking(body) {
     phone: clean(body.phone, 30),
     requests: clean(body.requests, 500),
     status: 'confirmed',
+    payment: payOption === 'now' ? 'pending' : 'on_site',
     createdAt: new Date().toISOString(),
   };
   db.bookings.push(booking);
@@ -151,6 +154,18 @@ function createBooking(body) {
 }
 
 // ---------- restaurant ----------
+
+// Turns [{ id, qty }] into priced lines from the menu. `forDelivery` also refuses dishes we don't deliver.
+function priceItems(list, forDelivery) {
+  if (!Array.isArray(list) || list.length === 0) throw bad(forDelivery ? 'Your basket is empty' : 'Add at least one dish or drink to confirm your table');
+  return list.map((it) => {
+    const mi = db.menu.find((x) => x.id === it.id);
+    const qty = Math.floor(Number(it.qty));
+    if (!mi || !mi.available || (forDelivery && !mi.deliverable)) throw bad(forDelivery ? 'An item in your basket is not available for delivery' : 'An item you chose is no longer on the menu');
+    if (!(qty >= 1 && qty <= 20)) throw bad('Quantities must be between 1 and 20');
+    return { id: mi.id, name: mi.name, price: mi.price, qty, line: mi.price * qty };
+  });
+}
 
 function seatingTimes() {
   const { services, intervalMinutes } = db.diningConfig;
@@ -191,6 +206,7 @@ function createReservation(body) {
   const slot = diningAvailability(date, party).find((s) => s.time === body.time);
   if (!slot) throw bad('That is not a seating time');
   if (slot.past) throw bad('That seating time has passed');
+  const items = priceItems(body.items, false);
   const [table] = freeTables(date, body.time, party);
   if (!table) throw new HttpError(409, 'No table is free for that time. Please pick another slot.');
   const r = {
@@ -207,7 +223,10 @@ function createReservation(body) {
     phone: clean(body.phone, 30),
     email: clean(body.email, 120),
     notes: clean(body.notes, 500),
-    status: 'confirmed',
+    items,
+    total: items.reduce((s, i) => s + i.line, 0),
+    // The table is held while the guest pays for their pre-order; unpaid holds lapse after HOLD_MINUTES.
+    status: 'awaiting_payment',
     createdAt: new Date().toISOString(),
   };
   db.reservations.push(r);
@@ -235,15 +254,7 @@ function createOrder(body) {
   if (!slot) throw bad('That is not a delivery slot');
   if (slot.closed) throw bad(`Orders for the ${body.slot} run close ${cfg.cutoffMinutes} minutes before departure`);
   if (slot.remaining < 1) throw new HttpError(409, 'That delivery run is full. Please choose the next one.');
-  if (!Array.isArray(body.items) || body.items.length === 0) throw bad('Your basket is empty');
-
-  const items = body.items.map((it) => {
-    const mi = db.menu.find((x) => x.id === it.id);
-    const qty = Math.floor(Number(it.qty));
-    if (!mi || !mi.available || !mi.deliverable) throw bad('An item in your basket is not available for delivery');
-    if (!(qty >= 1 && qty <= 20)) throw bad('Quantities must be between 1 and 20');
-    return { id: mi.id, name: mi.name, price: mi.price, qty, line: mi.price * qty };
-  });
+  const items = priceItems(body.items, true);
   const subtotal = items.reduce((s, i) => s + i.line, 0);
   if (subtotal < cfg.minimumOrder) throw bad(`Minimum delivery order is KES ${cfg.minimumOrder.toLocaleString()}`);
 
@@ -272,12 +283,124 @@ function createOrder(body) {
     name: clean(body.name, 100),
     phone: clean(body.phone, 30),
     notes: clean(body.notes, 300),
-    status: 'received',
+    status: 'awaiting_payment',
     createdAt: new Date().toISOString(),
   };
   db.orders.push(order);
   save();
   return order;
+}
+
+// ---------- payments ----------
+
+const HOLD_MINUTES = 15;
+
+// Orders and tables that were never paid for give their place back after HOLD_MINUTES.
+function expireUnpaid() {
+  const cutoff = new Date(Date.now() - HOLD_MINUTES * 60000).toISOString();
+  let changed = false;
+  for (const list of [db.orders, db.reservations]) {
+    for (const x of list) {
+      if (x.status === 'awaiting_payment' && x.createdAt < cutoff) {
+        x.status = 'cancelled';
+        x.cancelReason = 'Payment not completed';
+        changed = true;
+      }
+    }
+  }
+  for (const pay of db.payments) {
+    if (pay.status === 'pending' && pay.createdAt < cutoff) {
+      pay.status = 'failed';
+      pay.resultDesc = 'No answer from the phone';
+      changed = true;
+    }
+  }
+  if (changed) save();
+}
+
+const PAY_KINDS = {
+  order: { list: () => db.orders, label: 'Food order', due: (x) => x.status === 'awaiting_payment' && x.total },
+  reservation: { list: () => db.reservations, label: 'Table pre-order', due: (x) => x.status === 'awaiting_payment' && x.total },
+  booking: { list: () => db.bookings, label: 'Room booking', due: (x) => x.status !== 'cancelled' && x.payment !== 'paid' && x.total },
+};
+
+function payTarget(kind, refCode) {
+  const k = PAY_KINDS[kind];
+  if (!k) throw bad('Unknown payment type');
+  const target = k.list().find((x) => x.ref === String(refCode || '').toUpperCase());
+  if (!target) throw new HttpError(404, 'We could not find that reference');
+  return target;
+}
+
+const publicPayment = (p) => ({ id: p.id, ref: p.ref, kind: p.kind, targetRef: p.targetRef, amount: p.amount, phone: p.phone.replace(/^(\d{6})\d{3}/, '$1***'), status: p.status, mode: p.mode, receipt: p.receipt, resultDesc: p.resultDesc, payee: mpesa.cfg.accountName });
+
+async function startPayment(body) {
+  requireFields(body, ['kind', 'ref', 'phone']);
+  const target = payTarget(body.kind, body.ref);
+  const amount = PAY_KINDS[body.kind].due(target);
+  if (!amount) throw new HttpError(409, target.status === 'cancelled' ? 'This was cancelled because payment was not completed in time. Please start again.' : 'This is already paid');
+  const phone = mpesa.normalisePhone(body.phone);
+  if (!phone) throw bad('Enter a Safaricom M-Pesa number, like 0712 345 678');
+  for (const old of db.payments) {
+    if (old.targetRef === target.ref && old.status === 'pending') Object.assign(old, { status: 'failed', resultDesc: 'Replaced by a new prompt' });
+  }
+  const pay = {
+    id: id('py'),
+    ref: ref('PY'),
+    kind: body.kind,
+    targetRef: target.ref,
+    amount,
+    phone,
+    status: 'pending',
+    mode: mpesa.cfg.live ? 'live' : 'demo',
+    receipt: '',
+    resultDesc: '',
+    createdAt: new Date().toISOString(),
+  };
+  if (pay.mode === 'live') {
+    const r = await mpesa.stkPush({ phone, amount, account: target.ref, description: PAY_KINDS[body.kind].label });
+    Object.assign(pay, r);
+  }
+  db.payments.push(pay);
+  if (body.kind === 'booking') target.payment = 'pending';
+  save();
+  return publicPayment(pay);
+}
+
+function settlePayment(pay, state, desc, receipt) {
+  if (pay.status !== 'pending') return;
+  pay.status = state;
+  pay.resultDesc = desc || (state === 'paid' ? 'Paid' : 'Not paid');
+  pay.receipt = receipt || '';
+  pay.updatedAt = new Date().toISOString();
+  if (state === 'paid') {
+    const target = PAY_KINDS[pay.kind].list().find((x) => x.ref === pay.targetRef);
+    if (target) {
+      target.paid = true;
+      target.receipt = pay.receipt;
+      target.paidAt = pay.updatedAt;
+      if (pay.kind === 'order' && target.status === 'awaiting_payment') target.status = 'received';
+      if (pay.kind === 'reservation' && target.status === 'awaiting_payment') target.status = 'confirmed';
+      if (pay.kind === 'booking') target.payment = 'paid';
+    }
+  }
+  save();
+}
+
+async function paymentStatus(payId) {
+  const pay = db.payments.find((x) => x.id === payId);
+  if (!pay) throw new HttpError(404, 'Payment not found');
+  // Safaricom normally calls us back; on a computer it can't reach (like localhost) we ask instead.
+  if (pay.mode === 'live' && pay.status === 'pending' && pay.checkoutRequestId && Date.now() - Date.parse(pay.lastQuery || pay.createdAt) > 5000) {
+    pay.lastQuery = new Date().toISOString();
+    try {
+      const q = await mpesa.stkQuery(pay.checkoutRequestId);
+      if (q.state !== 'pending') settlePayment(pay, q.state, q.desc);
+    } catch (e) {
+      console.warn('  M-Pesa status check failed:', e.message);
+    }
+  }
+  return publicPayment(pay);
 }
 
 // ---------- venues & events ----------
@@ -336,7 +459,8 @@ function overview() {
   const occupied = liveBookings().filter((b) => b.checkIn <= today && b.checkOut > today);
   const revenue =
     db.bookings.filter((b) => b.status !== 'cancelled').reduce((s, b) => s + b.total, 0) +
-    db.orders.filter((o) => o.status !== 'cancelled').reduce((s, o) => s + o.total, 0);
+    db.orders.filter((o) => o.paid && o.status !== 'cancelled').reduce((s, o) => s + o.total, 0) +
+    db.reservations.filter((r) => r.paid).reduce((s, r) => s + (r.total || 0), 0);
   return {
     today,
     rooms: { total: db.rooms.length, active: activeRooms.length, occupiedTonight: occupied.length },
@@ -345,6 +469,8 @@ function overview() {
     departures: db.bookings.filter((b) => b.checkOut === today && b.status === 'checked_in'),
     reservationsToday: db.reservations.filter((r) => r.date === today && r.status !== 'cancelled').sort((a, b) => a.time.localeCompare(b.time)),
     ordersToday: db.orders.filter((o) => o.date === today && o.status !== 'cancelled'),
+    paymentMode: mpesa.cfg.live ? 'live' : 'demo',
+    paidToday: db.payments.filter((x) => x.status === 'paid' && (x.updatedAt || '').slice(0, 10) === today).reduce((s, x) => s + x.amount, 0),
     newEnquiries: db.enquiries.filter((e) => e.status === 'new').sort((a, b) => a.date.localeCompare(b.date)),
     deliverySlots: deliverySlots(today),
     revenue,
@@ -412,8 +538,9 @@ function coerce(fields, body, partial) {
 
 const STATUS = {
   bookings: ['confirmed', 'checked_in', 'checked_out', 'cancelled'],
-  reservations: ['confirmed', 'seated', 'completed', 'no_show', 'cancelled'],
-  orders: ['received', 'preparing', 'out_for_delivery', 'delivered', 'cancelled'],
+  reservations: ['awaiting_payment', 'confirmed', 'seated', 'completed', 'no_show', 'cancelled'],
+  orders: ['awaiting_payment', 'received', 'preparing', 'out_for_delivery', 'delivered', 'cancelled'],
+  payments: ['pending', 'paid', 'failed'],
   enquiries: ['new', 'contacted', 'confirmed', 'declined'],
 };
 
@@ -463,6 +590,7 @@ async function api(req, res, url) {
   const q = Object.fromEntries(url.searchParams);
   const method = req.method;
   const parts = p.split('/').filter(Boolean); // ['api', ...]
+  expireUnpaid();
 
   // ----- public -----
   if (method === 'GET' && p === '/api/hotel')
@@ -472,6 +600,7 @@ async function api(req, res, url) {
       checkIn: '14:00',
       checkOut: '10:30',
       phone: '+254796306263',
+      payments: { mode: mpesa.cfg.live ? 'live' : 'demo', payee: mpesa.cfg.accountName, holdMinutes: HOLD_MINUTES },
       today: nairobiNow().date,
       delivery: db.deliveryConfig,
       dining: db.diningConfig,
@@ -502,6 +631,28 @@ async function api(req, res, url) {
     );
   }
   if (method === 'POST' && p === '/api/bookings') return send(res, 201, createBooking(await readBody(req)));
+  if (method === 'POST' && parts[1] === 'bookings' && parts[3] === 'pay-on-site') {
+    const b = payTarget('booking', parts[2]);
+    if (b.payment !== 'paid') b.payment = 'on_site';
+    save();
+    return send(res, 200, b);
+  }
+  if (method === 'POST' && p === '/api/payments') return send(res, 201, await startPayment(await readBody(req)));
+  if (method === 'GET' && parts[1] === 'payments' && parts[2] && !parts[3]) return send(res, 200, await paymentStatus(parts[2]));
+  if (method === 'POST' && parts[1] === 'payments' && parts[3] === 'simulate') {
+    // Demo mode only: stands in for the customer typing their PIN on the phone.
+    const pay = db.payments.find((x) => x.id === parts[2]);
+    if (!pay || pay.mode !== 'demo') throw new HttpError(404, 'Payment not found');
+    const { action } = await readBody(req);
+    settlePayment(pay, action === 'pay' ? 'paid' : 'failed', action === 'pay' ? 'Paid (demo)' : 'Cancelled on the phone', action === 'pay' ? 'DEMO' + crypto.randomBytes(3).toString('hex').toUpperCase() : '');
+    return send(res, 200, publicPayment(pay));
+  }
+  if (method === 'POST' && p === '/api/mpesa/callback') {
+    const cb = mpesa.parseCallback(await readBody(req));
+    const pay = cb && db.payments.find((x) => x.checkoutRequestId === cb.checkoutRequestId);
+    if (pay) settlePayment(pay, cb.state, cb.desc, cb.receipt);
+    return send(res, 200, { ResultCode: 0, ResultDesc: 'Accepted' });
+  }
   if (method === 'GET' && parts[1] === 'bookings' && parts[2]) {
     const b = db.bookings.find((x) => x.ref === parts[2].toUpperCase());
     return b ? send(res, 200, b) : send(res, 404, { error: 'Booking not found' });
@@ -511,6 +662,10 @@ async function api(req, res, url) {
     return send(res, 200, diningAvailability(date, Number(q.party) || 2));
   }
   if (method === 'POST' && p === '/api/reservations') return send(res, 201, createReservation(await readBody(req)));
+  if (method === 'GET' && parts[1] === 'reservations' && parts[2]) {
+    const r = db.reservations.find((x) => x.ref === parts[2].toUpperCase());
+    return r ? send(res, 200, r) : send(res, 404, { error: 'Table booking not found' });
+  }
   if (method === 'GET' && p === '/api/venues') return send(res, 200, { venues: db.venues.filter((v) => v.active), eventTypes: EVENT_TYPES });
   if (method === 'POST' && p === '/api/enquiries') return send(res, 201, createEnquiry(await readBody(req)));
   if (method === 'GET' && p === '/api/menu') return send(res, 200, db.menu.filter((x) => x.available));
@@ -552,9 +707,15 @@ async function api(req, res, url) {
     if (method === 'PATCH' && recId) {
       const rec = list.find((x) => x.id === recId);
       if (!rec) throw new HttpError(404, 'Not found');
-      const { status } = await readBody(req);
-      if (!STATUS[resource].includes(status)) throw bad(`status must be one of ${STATUS[resource].join(', ')}`);
-      rec.status = status;
+      const { status, payment } = await readBody(req);
+      if (resource === 'payments') throw bad('Payments are updated by M-Pesa');
+      if (resource === 'bookings' && payment !== undefined) {
+        if (!['on_site', 'pending', 'paid'].includes(payment)) throw bad('payment must be on_site, pending or paid');
+        rec.payment = payment;
+      } else {
+        if (!STATUS[resource].includes(status)) throw bad(`status must be one of ${STATUS[resource].join(', ')}`);
+        rec.status = status;
+      }
       rec.updatedAt = new Date().toISOString();
       save();
       return send(res, 200, rec);
@@ -644,6 +805,7 @@ const server = http.createServer(async (req, res) => {
 if (require.main === module) {
   server.listen(PORT, () => {
     console.log(`\n  The Petrichor is open at http://localhost:${PORT}`);
+    console.log(`  M-Pesa payments:        ${mpesa.cfg.live ? `live (${mpesa.cfg.env}, shortcode ${mpesa.cfg.shortcode})` : 'demo mode (no real money; see mpesa.example.json)'}`);
     console.log(`  Admin dashboard:        http://localhost:${PORT}/admin  (password: ${process.env.ADMIN_PASSWORD ? '[from ADMIN_PASSWORD]' : ADMIN_PASSWORD})\n`);
   });
 }

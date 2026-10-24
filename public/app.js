@@ -30,6 +30,15 @@
 
   let hotel, roomTypes = [], menu = [], TODAY;
 
+  // Order references paid on this device, so the tracking page can list them.
+  const remember = (r) => {
+    try {
+      const list = JSON.parse(localStorage.getItem('petrichor-orders') || '[]').filter((x) => x !== r);
+      localStorage.setItem('petrichor-orders', JSON.stringify([r, ...list].slice(0, 8)));
+    } catch {}
+  };
+  const pay = (opts) => window.PetrichorPay.open(opts);
+
   // ---------- ambience ----------
   function rain() {
     const c = $('#rain');
@@ -396,6 +405,11 @@
         </div>
         <label class="field" style="margin-top:14px">Email<input name="email" type="email" required autocomplete="email" /></label>
         <label class="field" style="margin-top:14px">Special requests<textarea name="requests" placeholder="Arrival time, airport pickup, celebrations…"></textarea></label>
+        <fieldset class="pay-choice">
+          <legend>How would you like to pay?</legend>
+          <label><input type="radio" name="payOption" value="now" checked /><span><b>Pay now with M-Pesa</b><small>A prompt goes to your phone. Your room is settled before you arrive.</small></span></label>
+          <label><input type="radio" name="payOption" value="on_site" /><span><b>Pay on arrival</b><small>Pay at the front desk by M-Pesa, card or cash when you check in.</small></span></label>
+        </fieldset>
         <div class="error" id="bkError"></div>
         <div class="actions"><button type="button" class="btn ghost" id="bkBack">Back</button><button class="btn" type="submit">Confirm reservation</button></div>
       </form>`;
@@ -409,6 +423,7 @@
         const b = await api('/api/bookings', { method: 'POST', body: { ...f, typeId: bk.typeId, checkIn: bk.checkIn, checkOut: bk.checkOut, guests: bk.guests } });
         stepDone(b);
         renderCalendar();
+        if (b.payment === 'pending') payBooking(b);
       } catch (err) {
         $('#bkError').textContent = err.message;
         btn.disabled = false;
@@ -418,17 +433,30 @@
 
   function stepDone(b) {
     setStep(3, 'You are booked');
+    const payLine =
+      b.payment === 'paid' ? `<span class="paid-badge">Paid${b.receipt ? ` · M-Pesa ${esc(b.receipt)}` : ''}</span>`
+      : b.payment === 'on_site' ? '<p style="color:var(--muted)">You\u2019ll pay at the front desk when you arrive. M-Pesa, card or cash.</p>'
+      : `<p style="color:var(--muted)">Your room is reserved. Payment is still to come.</p>
+         <div class="actions" style="justify-content:center"><button class="btn ghost small" id="bkSite">Pay on arrival instead</button><button class="btn small" id="bkPay">Pay now with M-Pesa</button></div>`;
     $('#bkBody').innerHTML = `
       <div class="confirm">
         <p class="eyebrow">Booking reference</p>
         <div class="ref">${esc(b.ref)}</div>
         <p>${esc(b.typeName)}, room ${esc(b.roomNumber)} · ${fmtDate(b.checkIn)} to ${fmtDate(b.checkOut)}</p>
         <p class="price">${kes(b.total)}</p>
-        <p style="color:var(--muted)">Payment is taken on arrival. Check-in from 2:00 pm. Keep your reference to manage the booking or order in-room dining.</p>
+        ${payLine}
+        <p style="color:var(--muted)">Check-in from 2:00 pm. Keep your reference to manage the booking or order in-room dining.</p>
         <button class="btn" data-close>Done</button>
       </div>`;
     $('#bkBody [data-close]').onclick = closeBooking;
+    if ($('#bkPay')) $('#bkPay').onclick = () => payBooking(b);
+    if ($('#bkSite')) $('#bkSite').onclick = async () => stepDone(await api(`/api/bookings/${b.ref}/pay-on-site`, { method: 'POST' }));
     bk.typeId = null;
+  }
+
+  async function payBooking(b) {
+    const r = await pay({ kind: 'booking', ref: b.ref, amount: b.total, phone: b.phone, title: 'Pay for your stay' });
+    if (r === 'paid') stepDone(await api(`/api/bookings/${b.ref}`));
   }
 
   function heroSearch() {
@@ -456,19 +484,23 @@
     $('#tDate').value = TODAY;
     $('#tParty').innerHTML = Array.from({ length: 8 }, (_, i) => `<option ${i === 1 ? 'selected' : ''}>${i + 1}</option>`).join('');
     $('#tDate').onchange = $('#tParty').onchange = loadSlots;
+    preOrder();
     $('#tForm').onsubmit = async (e) => {
       e.preventDefault();
       if (!tSel) return;
+      $('#tError').textContent = '';
+      const items = Object.entries(tItems).map(([id, qty]) => ({ id, qty }));
+      if (!items.length) return ($('#tError').textContent = 'Add at least one dish or drink. It\u2019s what confirms your table.');
       const f = Object.fromEntries(new FormData(e.target));
       const btn = e.target.querySelector('[type=submit]');
       btn.disabled = true;
       try {
-        const r = await api('/api/reservations', { method: 'POST', body: { ...f, date: $('#tDate').value, time: tSel, partySize: Number($('#tParty').value) } });
+        const r = await api('/api/reservations', { method: 'POST', body: { ...f, items, date: $('#tDate').value, time: tSel, partySize: Number($('#tParty').value) } });
+        const paid = await pay({ kind: 'reservation', ref: r.ref, amount: r.total, phone: f.phone, title: 'Pay to confirm your table' });
+        tableDone(r, paid === 'paid', f.phone);
         e.target.reset();
-        $('#tForm').style.display = 'none';
-        tSel = null;
-        $('#tSlots').innerHTML = `<div class="confirm"><p class="eyebrow">Table reference</p><div class="ref">${esc(r.ref)}</div><p>${fmtDate(r.date)} at ${r.time} · ${r.partySize} guests · ${esc(r.area)}</p><button class="btn ghost small" id="tAgain">Book another</button></div>`;
-        $('#tAgain').onclick = loadSlots;
+        tItems = {};
+        drawPreOrder();
       } catch (err) {
         $('#tError').textContent = err.message;
         loadSlots(true);
@@ -477,6 +509,42 @@
       }
     };
     loadSlots();
+  }
+
+  function tableDone(r, paid, phone) {
+    $('#tForm').style.display = 'none';
+    tSel = null;
+    const lines = r.items.map((i) => `${i.qty} × ${esc(i.name)}`).join(', ');
+    $('#tSlots').innerHTML = paid
+      ? `<div class="confirm"><p class="eyebrow">Table confirmed</p><div class="ref">${esc(r.ref)}</div><p>${fmtDate(r.date)} at ${r.time} · ${r.partySize} guests · ${esc(r.area)}</p><p style="color:var(--muted)">Pre-ordered and paid: ${lines} (${kes(r.total)}). It\u2019ll be ready when you sit down.</p><button class="btn ghost small" id="tAgain">Book another</button></div>`
+      : `<div class="confirm"><p class="eyebrow">Table held for ${hotel.payments.holdMinutes} minutes</p><div class="ref">${esc(r.ref)}</div><p>${fmtDate(r.date)} at ${r.time} · ${r.partySize} guests</p><p style="color:var(--muted)">Your table is confirmed once the pre-order of ${kes(r.total)} is paid.</p><div class="actions" style="justify-content:center"><button class="btn ghost small" id="tAgain">Start over</button><button class="btn small" id="tPayNow">Pay with M-Pesa</button></div></div>`;
+    $('#tAgain').onclick = loadSlots;
+    if ($('#tPayNow')) $('#tPayNow').onclick = async () => tableDone(r, (await pay({ kind: 'reservation', ref: r.ref, amount: r.total, phone, title: 'Pay to confirm your table' })) === 'paid', phone);
+  }
+
+  // Every table booking includes something from the menu, paid up front.
+  let tItems = {};
+  function preOrder() {
+    const cats = [...new Set(menu.map((m) => m.category))];
+    $('#tItem').innerHTML = '<option value="">Choose a dish or drink…</option>' + cats.map((c) => `<optgroup label="${esc(c)}">${menu.filter((m) => m.category === c).map((m) => `<option value="${m.id}">${esc(m.name)} · ${kes(m.price)}</option>`).join('')}</optgroup>`).join('');
+    $('#tAdd').onclick = () => {
+      const id = $('#tItem').value;
+      if (!id) return $('#tItem').focus();
+      tItems[id] = (tItems[id] || 0) + 1;
+      $('#tItem').value = '';
+      $('#tError').textContent = '';
+      drawPreOrder();
+    };
+    drawPreOrder();
+  }
+  function drawPreOrder() {
+    const lines = Object.entries(tItems).map(([id, qty]) => ({ m: menu.find((x) => x.id === id), qty }));
+    const total = lines.reduce((s, l) => s + l.m.price * l.qty, 0);
+    $('#tLines').innerHTML = lines.length
+      ? lines.map((l) => `<li><span>${l.qty} × ${esc(l.m.name)}</span><span>${kes(l.m.price * l.qty)} <button type="button" class="x" data-rm="${l.m.id}" aria-label="Remove">×</button></span></li>`).join('') + `<li class="sum"><span>Pay now to confirm</span><span>${kes(total)}</span></li>`
+      : '<li class="empty">Nothing added yet. A coffee is enough.</li>';
+    $$('#tLines [data-rm]').forEach((b) => (b.onclick = () => { const k = b.dataset.rm; tItems[k] -= 1; if (!tItems[k]) delete tItems[k]; drawPreOrder(); }));
+    $('#tSubmit').textContent = total ? `Pay ${kes(total)} & confirm` : 'Pay & confirm table';
   }
   async function loadSlots(keepForm) {
     if (keepForm !== true) { tSel = null; $('#tForm').style.display = 'none'; $('#tError').textContent = ''; }
@@ -561,16 +629,24 @@
         e.target.reset();
         drawBasket();
         loadDeliverySlots();
-        $('#basketLines').innerHTML = `<li style="display:block;text-align:center;border:0"><p class="eyebrow">Order reference</p><div class="confirm"><div class="ref" style="font-size:2rem">${esc(o.ref)}</div><p>${kes(o.total)} · ${fmtDate(o.date)}, ${o.slot} run</p></div></li>`;
-        toast(`Order ${o.ref} received. It leaves the kitchen at ${o.slot}.`);
+        remember(o.ref);
+        orderPending(o, f.phone);
+        if ((await pay({ kind: 'order', ref: o.ref, amount: o.total, phone: f.phone, title: 'Pay to confirm your order' })) === 'paid') location.href = `/track.html?ref=${o.ref}`;
       } catch (err) {
         $('#oError').textContent = err.message;
         loadDeliverySlots();
       } finally {
-        btn.disabled = false;
+        btn.disabled = !Object.keys(order.items).length;
       }
     };
     drawBasket();
+  }
+
+  function orderPending(o, phone) {
+    $('#basketLines').innerHTML = `<li style="display:block;text-align:center;border:0"><p class="eyebrow">Order ${esc(o.ref)} · waiting for payment</p><div class="confirm"><div class="ref" style="font-size:2rem">${kes(o.total)}</div><p>${fmtDate(o.date)}, ${o.slot} run. Your place on the run is held for ${hotel.payments.holdMinutes} minutes.</p><div class="actions" style="justify-content:center"><a class="btn ghost small" href="/track.html?ref=${esc(o.ref)}">Track order</a><button class="btn small" type="button" id="oPayNow">Pay with M-Pesa</button></div></div></li>`;
+    $('#oPayNow').onclick = async () => {
+      if ((await pay({ kind: 'order', ref: o.ref, amount: o.total, phone, title: 'Pay to confirm your order' })) === 'paid') location.href = `/track.html?ref=${o.ref}`;
+    };
   }
 
   async function loadDeliverySlots() {
@@ -607,8 +683,8 @@
       e.preventDefault();
       const r = e.target.ref.value.trim().toUpperCase();
       const out = $('#lookupResult');
-      const kind = r.startsWith('PH') ? 'bookings' : r.startsWith('TB') ? null : r.startsWith('DL') ? 'orders' : null;
-      if (r.startsWith('TB')) return (out.innerHTML = `<p>Table bookings are confirmed by phone on the day. To change one, call <a href="tel:+254796306263">+254 796 306 263</a> quoting <b>${esc(r)}</b>.</p>`);
+      if (r.startsWith('DL')) return (location.href = `/track.html?ref=${encodeURIComponent(r)}`);
+      const kind = r.startsWith('PH') ? 'bookings' : r.startsWith('TB') ? 'reservations' : null;
       if (r.startsWith('EV')) return (out.innerHTML = `<p>Our events team will call you about request <b>${esc(r)}</b>. To follow up, call or WhatsApp <a href="tel:+254796306263">+254 796 306 263</a>.</p>`);
       if (!kind) return (out.innerHTML = '<p>References start with PH (stays), TB (tables), DL (deliveries) or EV (events).</p>');
       try {
@@ -616,8 +692,8 @@
         const status = x.status.replace(/_/g, ' ');
         out.innerHTML =
           kind === 'bookings'
-            ? `<div class="summary" style="color:var(--ink)"><div><b>${esc(x.typeName)}, room ${esc(x.roomNumber)}</b><span class="avail ok">${esc(status)}</span></div><div><span>${fmtDate(x.checkIn)} → ${fmtDate(x.checkOut)}</span><span>${x.nights} nights · ${x.guests} guests</span></div><div class="total"><span>Total</span><span>${kes(x.total)}</span></div></div>`
-            : `<div class="summary" style="color:var(--ink)"><div><b>Delivery ${esc(x.ref)}</b><span class="avail ok">${esc(status)}</span></div><div><span>${fmtDate(x.date)}, ${x.slot} run</span><span>${x.destination.type === 'room' ? 'Room ' + esc(x.destination.room) : esc(x.destination.address)}</span></div>${x.items.map((i) => `<div><span>${i.qty} × ${esc(i.name)}</span><span>${kes(i.line)}</span></div>`).join('')}<div class="total"><span>Total</span><span>${kes(x.total)}</span></div></div>`;
+            ? `<div class="summary" style="color:var(--ink)"><div><b>${esc(x.typeName)}, room ${esc(x.roomNumber)}</b><span class="avail ok">${esc(status)}</span></div><div><span>${fmtDate(x.checkIn)} → ${fmtDate(x.checkOut)}</span><span>${x.nights} nights · ${x.guests} guests</span></div><div><span>Payment</span><span>${x.payment === 'paid' ? 'Paid by M-Pesa' : 'On arrival'}</span></div><div class="total"><span>Total</span><span>${kes(x.total)}</span></div></div>`
+            : `<div class="summary" style="color:var(--ink)"><div><b>Table ${esc(x.tableName)} · ${esc(x.area)}</b><span class="avail ok">${esc(status)}</span></div><div><span>${fmtDate(x.date)} at ${x.time}</span><span>${x.partySize} guests</span></div>${(x.items || []).map((i) => `<div><span>${i.qty} × ${esc(i.name)}</span><span>${kes(i.line)}</span></div>`).join('')}<div class="total"><span>Pre-order${x.paid ? ' · paid' : ''}</span><span>${kes(x.total || 0)}</span></div></div>`;
       } catch (err) {
         out.innerHTML = `<p>${esc(err.message)}</p>`;
       }

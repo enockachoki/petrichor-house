@@ -57,3 +57,15 @@ Room count, nightly rate and menu prices are placeholders. Change them in the st
 - `data/db.json`: the database, created on first start
 
 Before taking real guests you would want to add online payment (for example M-Pesa), email or SMS confirmations, and a proper database and staff accounts.
+
+
+## M-Pesa payments (STK push)
+
+- **Food orders** go to the kitchen only once paid. The customer chooses which M-Pesa number gets the PIN prompt.
+- **Table bookings** need at least one dish or drink pre-ordered and paid to confirm. Unpaid orders and tables are released after 15 minutes.
+- **Room bookings** offer *Pay now with M-Pesa* or *Pay on arrival* (staff can "Mark paid" in Room bookings).
+- **Track an order** at `/track.html?ref=DL…`: items, payment, progress and a little kitchen animation.
+
+Out of the box payments run in **demo mode**: no money moves and the customer confirms a pretend PIN prompt on screen.
+
+To take real money you need a Safaricom **Paybill or Till** with *Lipa na M-Pesa Online* enabled (an STK push can't pay into a personal number such as 0796 306 263), plus an app on https://developer.safaricom.co.ke. Copy `mpesa.example.json` to `mpesa.json`, fill it in, and restart. `callbackUrl` must be a public https address that reaches `/api/mpesa/callback`; on a PC without one the site asks Safaricom for the result every few seconds instead.

@@ -6,6 +6,7 @@
   const kes = (n) => 'KES ' + Number(n).toLocaleString('en-KE');
   const fmtDate = (d) => new Date(d + 'T12:00:00Z').toLocaleDateString('en-GB', { timeZone: 'UTC', weekday: 'short', day: 'numeric', month: 'short' });
   const addDays = (date, n) => { const d = new Date(date + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+  const paidCell = (x) => (x.paid || x.payment === 'paid' ? `${pill('paid')}${x.receipt ? `<br><small>${esc(x.receipt)}</small>` : ''}` : x.payment === 'on_site' ? pill('on_site') : pill('unpaid'));
   const pill = (s) => `<span class="pill ${esc(s)}">${esc(String(s).replace(/_/g, ' '))}</span>`;
 
   let token = null;
@@ -77,10 +78,26 @@
   }
 
   const VIEWS = {
+    async payments(el) {
+      const list = await api('/payments');
+      const f = VIEWS.payments.filter || 'all';
+      const shown = list.filter((x) => f === 'all' || x.status === f);
+      const total = list.filter((x) => x.status === 'paid').reduce((s, x) => s + x.amount, 0);
+      const what = { order: 'Food order', reservation: 'Table pre-order', booking: 'Room' };
+      el.innerHTML = `
+        <h1>M-Pesa payments</h1><p class="sub">Every STK prompt sent from the website. ${kes(total)} received in all.</p>
+        <div class="filters"><label class="field">Show<select id="pFilter">${['all', 'paid', 'pending', 'failed'].map((x) => `<option ${x === f ? 'selected' : ''}>${x}</option>`).join('')}</select></label></div>
+        <div class="card">${shown.length ? `<table class="data"><tr><th>When</th><th>For</th><th>Reference</th><th>Phone</th><th>Amount</th><th>M-Pesa code</th><th>Status</th></tr>
+          ${shown.map((x) => `<tr><td><small>${new Date(x.createdAt).toLocaleString('en-GB', { timeZone: 'Africa/Nairobi', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</small></td><td>${what[x.kind] || x.kind}${x.mode === 'demo' ? ' <small>(demo)</small>' : ''}</td><td><b>${esc(x.targetRef)}</b></td><td>${esc(x.phone)}</td><td>${kes(x.amount)}</td><td>${esc(x.receipt) || '<small>–</small>'}</td><td>${pill(x.status)}${x.resultDesc && x.status !== 'paid' ? `<br><small>${esc(x.resultDesc)}</small>` : ''}</td></tr>`).join('')}
+        </table>` : '<p class="empty">No payments yet.</p>'}</div>`;
+      $('#pFilter').onchange = (e) => { VIEWS.payments.filter = e.target.value; refresh(); };
+    },
+
     async overview(el) {
       const o = await api('/overview');
       el.innerHTML = `
         <h1>Good day</h1><p class="sub">${fmtDate(o.today)} · Kakamega time</p>
+        ${o.paymentMode === 'demo' ? '<p class="banner">M-Pesa is in <b>demo mode</b>: payments on the website are pretend and no money moves. Add your Daraja details in <code>mpesa.json</code> to take real payments.</p>' : ''}
         <div class="kpis">
           <div class="kpi"><span>Occupancy tonight</span><b>${o.occupancy}%</b></div>
           <div class="kpi"><span>Rooms occupied</span><b>${o.rooms.occupiedTonight} / ${o.rooms.active}</b></div>
@@ -88,6 +105,7 @@
           <div class="kpi"><span>Tables today</span><b>${o.reservationsToday.length}</b></div>
           <div class="kpi"><span>Deliveries today</span><b>${o.ordersToday.length}</b></div>
           <div class="kpi"><span>New event enquiries</span><b>${o.newEnquiries.length}</b></div>
+          <div class="kpi"><span>M-Pesa today</span><b style="font-size:1.7rem">${kes(o.paidToday)}</b></div>
           <div class="kpi"><span>Booked revenue</span><b style="font-size:1.7rem">${kes(o.revenue)}</b></div>
         </div>
         <div class="two">
@@ -134,10 +152,11 @@
       el.innerHTML = `
         <h1>Room bookings</h1><p class="sub">${list.length} total. Change a status to check guests in or out, or cancel.</p>
         <div class="filters"><label class="field">Show<select id="bFilter">${['active', 'all', 'confirmed', 'checked_in', 'checked_out', 'cancelled'].map((x) => `<option ${x === f ? 'selected' : ''} value="${x}">${x.replace('_', ' ')}</option>`).join('')}</select></label></div>
-        <div class="card">${shown.length ? `<table class="data"><tr><th>Ref</th><th>Guest</th><th>Room</th><th>Stay</th><th>Total</th><th>Requests</th><th>Status</th></tr>
-          ${shown.map((b) => `<tr><td><b>${b.ref}</b></td><td>${esc(b.name)}<br><small>${esc(b.phone)} · ${esc(b.email)}</small></td><td>${esc(b.roomNumber)}<br><small>${esc(b.typeName)}</small></td><td>${fmtDate(b.checkIn)} → ${fmtDate(b.checkOut)}<br><small>${b.nights} nights · ${b.guests} guests</small></td><td>${kes(b.total)}</td><td><small>${esc(b.requests)}</small></td><td>${statusSelect('bookings', b, ['confirmed', 'checked_in', 'checked_out', 'cancelled'])}</td></tr>`).join('')}
+        <div class="card">${shown.length ? `<table class="data"><tr><th>Ref</th><th>Guest</th><th>Room</th><th>Stay</th><th>Total</th><th>Payment</th><th>Requests</th><th>Status</th></tr>
+          ${shown.map((b) => `<tr><td><b>${b.ref}</b></td><td>${esc(b.name)}<br><small>${esc(b.phone)} · ${esc(b.email)}</small></td><td>${esc(b.roomNumber)}<br><small>${esc(b.typeName)}</small></td><td>${fmtDate(b.checkIn)} → ${fmtDate(b.checkOut)}<br><small>${b.nights} nights · ${b.guests} guests</small></td><td>${kes(b.total)}</td><td>${paidCell(b)}${b.payment !== 'paid' && b.status !== 'cancelled' ? `<br><button class="mini" data-markpaid="${b.id}" style="margin-top:4px">Mark paid</button>` : ''}</td><td><small>${esc(b.requests)}</small></td><td>${statusSelect('bookings', b, ['confirmed', 'checked_in', 'checked_out', 'cancelled'])}</td></tr>`).join('')}
         </table>` : '<p class="empty">No bookings match.</p>'}</div>`;
       $('#bFilter').onchange = (e) => { VIEWS.bookings.filter = e.target.value; refresh(); };
+      $$('[data-markpaid]', el).forEach((b) => (b.onclick = () => attempt(async () => { await api(`/bookings/${b.dataset.markpaid}`, { method: 'PATCH', body: { payment: 'paid' } }); refresh(); }, 'Marked as paid')));
       bindStatus(el);
     },
 
@@ -170,8 +189,8 @@
       el.innerHTML = `
         <h1>Table bookings</h1><p class="sub">Garden, terrace and rooftop bar. Each seating holds a table for 90 minutes.</p>
         <div class="filters"><label class="field">Date<input type="date" id="rDate" value="${d === 'all' ? '' : d}" /></label><button class="mini" id="rAll">Show all dates</button></div>
-        <div class="card">${day.length ? `<table class="data"><tr><th>Ref</th><th>Date</th><th>Time</th><th>Guest</th><th>Party</th><th>Table</th><th>Notes</th><th>Status</th></tr>
-          ${day.map((r) => `<tr><td><b>${r.ref}</b></td><td>${fmtDate(r.date)}</td><td>${r.time}<br><small>${r.service}</small></td><td>${esc(r.name)}<br><small>${esc(r.phone)}</small></td><td>${r.partySize}</td><td>${esc(r.tableName)}<br><small>${esc(r.area)}</small></td><td><small>${esc(r.notes)}</small></td><td>${statusSelect('reservations', r, ['confirmed', 'seated', 'completed', 'no_show', 'cancelled'])}</td></tr>`).join('')}
+        <div class="card">${day.length ? `<table class="data"><tr><th>Ref</th><th>Date</th><th>Time</th><th>Guest</th><th>Party</th><th>Table</th><th>Pre-order</th><th>Notes</th><th>Status</th></tr>
+          ${day.map((r) => `<tr><td><b>${r.ref}</b></td><td>${fmtDate(r.date)}</td><td>${r.time}<br><small>${r.service}</small></td><td>${esc(r.name)}<br><small>${esc(r.phone)}</small></td><td>${r.partySize}</td><td>${esc(r.tableName)}<br><small>${esc(r.area)}</small></td><td><small>${(r.items || []).map((i) => `${i.qty}× ${esc(i.name)}`).join('<br>')}</small>${r.total ? `<br>${kes(r.total)} ${paidCell(r)}` : ''}</td><td><small>${esc(r.notes)}</small></td><td>${statusSelect('reservations', r, ['awaiting_payment', 'confirmed', 'seated', 'completed', 'no_show', 'cancelled'])}</td></tr>`).join('')}
         </table>` : '<p class="empty">No table bookings for this date.</p>'}</div>
         <div class="card"><h3>Floor for ${d === 'all' ? 'all dates' : fmtDate(d)}</h3><table class="data"><tr><th>Table</th><th>Seats</th><th>Area</th><th>Booked times</th></tr>
           ${tables.map((t) => `<tr><td>${esc(t.name)}</td><td>${t.capacity}</td><td>${esc(t.area)}</td><td>${day.filter((r) => r.tableId === t.id && r.status !== 'cancelled').map((r) => `${r.time} (${r.partySize})`).join(', ') || '<small>free</small>'}</td></tr>`).join('')}
@@ -235,8 +254,8 @@
         ${slots.length ? slots.map((s) => {
           const [date, slot] = s.split(' ');
           const os = shown.filter((o) => o.date === date && o.slot === slot);
-          return `<div class="card"><h3>${fmtDate(date)} · ${slot} run <small style="font-family:var(--sans);font-size:.8rem;color:var(--muted)">${os.length} orders</small></h3><table class="data"><tr><th>Ref</th><th>Guest</th><th>Deliver to</th><th>Items</th><th>Total</th><th>Status</th></tr>
-            ${os.map((o) => `<tr><td><b>${o.ref}</b></td><td>${esc(o.name)}<br><small>${esc(o.phone)}</small></td><td>${o.destination.type === 'room' ? 'Room ' + esc(o.destination.room) : esc(o.destination.address)}${o.notes ? `<br><small>${esc(o.notes)}</small>` : ''}</td><td><small>${o.items.map((i) => `${i.qty}× ${esc(i.name)}`).join('<br>')}</small></td><td>${kes(o.total)}</td><td>${statusSelect('orders', o, ['received', 'preparing', 'out_for_delivery', 'delivered', 'cancelled'])}</td></tr>`).join('')}
+          return `<div class="card"><h3>${fmtDate(date)} · ${slot} run <small style="font-family:var(--sans);font-size:.8rem;color:var(--muted)">${os.length} orders</small></h3><table class="data"><tr><th>Ref</th><th>Guest</th><th>Deliver to</th><th>Items</th><th>Total</th><th>Payment</th><th>Status</th></tr>
+            ${os.map((o) => `<tr><td><b>${o.ref}</b></td><td>${esc(o.name)}<br><small>${esc(o.phone)}</small></td><td>${o.destination.type === 'room' ? 'Room ' + esc(o.destination.room) : esc(o.destination.address)}${o.notes ? `<br><small>${esc(o.notes)}</small>` : ''}</td><td><small>${o.items.map((i) => `${i.qty}× ${esc(i.name)}`).join('<br>')}</small></td><td>${kes(o.total)}</td><td>${paidCell(o)}</td><td>${statusSelect('orders', o, ['awaiting_payment', 'received', 'preparing', 'out_for_delivery', 'delivered', 'cancelled'])}</td></tr>`).join('')}
           </table></div>`;
         }).join('') : '<div class="card"><p class="empty">No delivery orders for this date.</p></div>'}`;
       $('#oDate').onchange = (e) => { VIEWS.orders.date = e.target.value || 'all'; refresh(); };
