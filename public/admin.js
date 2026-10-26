@@ -97,7 +97,9 @@
       const o = await api('/overview');
       el.innerHTML = `
         <h1>Good day</h1><p class="sub">${fmtDate(o.today)} · Kakamega time</p>
-        ${o.paymentMode === 'demo' ? '<p class="banner">M-Pesa is in <b>demo mode</b>: payments on the website are pretend and no money moves. Add your Daraja details in <code>mpesa.json</code> to take real payments.</p>' : ''}
+        ${o.paymentMode === 'demo' ? '<p class="banner">M-Pesa is in <b>demo mode</b>: payments on the website are pretend and no money moves. Add your Daraja details in <code>mpesa.json</code> to take real payments.</p>'
+          : o.paymentMode === 'off' ? '<p class="banner">M-Pesa is <b>switched off</b>: <code>mpesa.json</code> says production but the keys are missing. Guests cannot pay online.</p>'
+          : o.paymentEnv === 'sandbox' ? '<p class="banner">M-Pesa is on the <b>Safaricom sandbox</b>: prompts are real, money is test money. Switch <code>mpesa.json</code> to production to go live.</p>' : ''}
         <div class="kpis">
           <div class="kpi"><span>Occupancy tonight</span><b>${o.occupancy}%</b></div>
           <div class="kpi"><span>Rooms occupied</span><b>${o.rooms.occupiedTonight} / ${o.rooms.active}</b></div>

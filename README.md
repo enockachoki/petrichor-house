@@ -76,4 +76,4 @@ Out of the box payments run in **demo mode**: no money moves and the customer co
 
 Save, run `node mpesa.js` to check the keys, then `node server.js`. The sandbox Paybill 174379 and its test passkey are filled in for you. Prompts go to the Safaricom number the guest types.
 
-**Going live:** you need a Paybill or Till with *Lipa na M-Pesa Online* (an STK push can't pay into a personal number), the production keys and passkey from Safaricom, and `"env": "production"`, `"shortcode"`, `"passkey"` (plus `"type": "till"` and `"till"` for a Till) in `mpesa.json`. Set `callbackUrl` to a public https address that reaches `/api/mpesa/callback`; without one the site asks Safaricom for each result every few seconds instead.
+**Going live:** see [DEPLOY.md](DEPLOY.md). It only takes swapping `mpesa.json` for the production version.

@@ -339,6 +339,9 @@ async function startPayment(body) {
   const target = payTarget(body.kind, body.ref);
   const amount = PAY_KINDS[body.kind].due(target);
   if (!amount) throw new HttpError(409, target.status === 'cancelled' ? 'This was cancelled because payment was not completed in time. Please start again.' : 'This is already paid');
+  if (mpesa.cfg.mode === 'off') throw new HttpError(503, 'Online payment is not available right now. Please call +254 796 306 263.');
+  const recent = db.payments.find((x) => x.targetRef === target.ref && x.status === 'pending' && Date.now() - Date.parse(x.createdAt) < 20000);
+  if (recent) throw new HttpError(429, 'A prompt was just sent. Check the phone, or wait a few seconds before sending another.');
   const phone = mpesa.normalisePhone(body.phone);
   if (!phone) throw bad('Enter a Safaricom M-Pesa number, like 0712 345 678');
   for (const old of db.payments) {
@@ -352,7 +355,7 @@ async function startPayment(body) {
     amount,
     phone,
     status: 'pending',
-    mode: mpesa.cfg.live ? 'live' : 'demo',
+    mode: mpesa.cfg.mode,
     receipt: '',
     resultDesc: '',
     createdAt: new Date().toISOString(),
@@ -469,7 +472,8 @@ function overview() {
     departures: db.bookings.filter((b) => b.checkOut === today && b.status === 'checked_in'),
     reservationsToday: db.reservations.filter((r) => r.date === today && r.status !== 'cancelled').sort((a, b) => a.time.localeCompare(b.time)),
     ordersToday: db.orders.filter((o) => o.date === today && o.status !== 'cancelled'),
-    paymentMode: mpesa.cfg.live ? 'live' : 'demo',
+    paymentMode: mpesa.cfg.mode,
+    paymentEnv: mpesa.cfg.env,
     paidToday: db.payments.filter((x) => x.status === 'paid' && (x.updatedAt || '').slice(0, 10) === today).reduce((s, x) => s + x.amount, 0),
     newEnquiries: db.enquiries.filter((e) => e.status === 'new').sort((a, b) => a.date.localeCompare(b.date)),
     deliverySlots: deliverySlots(today),
@@ -600,7 +604,7 @@ async function api(req, res, url) {
       checkIn: '14:00',
       checkOut: '10:30',
       phone: '+254796306263',
-      payments: { mode: mpesa.cfg.live ? 'live' : 'demo', payee: mpesa.cfg.accountName, holdMinutes: HOLD_MINUTES },
+      payments: { mode: mpesa.cfg.mode, payee: mpesa.cfg.accountName, holdMinutes: HOLD_MINUTES },
       today: nairobiNow().date,
       delivery: db.deliveryConfig,
       dining: db.diningConfig,
@@ -649,8 +653,10 @@ async function api(req, res, url) {
   }
   if (method === 'POST' && p === '/api/mpesa/callback') {
     const cb = mpesa.parseCallback(await readBody(req));
-    const pay = cb && db.payments.find((x) => x.checkoutRequestId === cb.checkoutRequestId);
-    if (pay) settlePayment(pay, cb.state, cb.desc, cb.receipt);
+    // The CheckoutRequestID is never shown publicly, so only Safaricom can name it; the amount must match too.
+    const pay = cb && cb.checkoutRequestId && db.payments.find((x) => x.mode === 'live' && x.checkoutRequestId === cb.checkoutRequestId);
+    if (pay && (cb.state !== 'paid' || cb.amount === Math.ceil(pay.amount))) settlePayment(pay, cb.state, cb.desc, cb.receipt);
+    else if (pay) console.warn(`  M-Pesa callback for ${pay.ref} had amount ${cb.amount}, expected ${pay.amount}. Ignored.`);
     return send(res, 200, { ResultCode: 0, ResultDesc: 'Accepted' });
   }
   if (method === 'GET' && parts[1] === 'bookings' && parts[2]) {
@@ -805,7 +811,9 @@ const server = http.createServer(async (req, res) => {
 if (require.main === module) {
   server.listen(PORT, () => {
     console.log(`\n  The Petrichor is open at http://localhost:${PORT}`);
-    console.log(`  M-Pesa payments:        ${mpesa.cfg.live ? `live (${mpesa.cfg.env}, shortcode ${mpesa.cfg.shortcode})` : 'demo mode (no real money; see mpesa.example.json)'}`);
+    const pm = mpesa.cfg;
+    console.log(`  M-Pesa payments:        ${pm.mode === 'live' ? `${pm.env === 'production' ? 'LIVE' : 'sandbox'} (shortcode ${pm.shortcode})` : pm.mode === 'off' ? 'OFF: env is production but mpesa.json is missing keys' : 'demo mode (no real money; see mpesa.example.json)'}`);
+    if (pm.env === 'production' && !process.env.ADMIN_PASSWORD) console.warn('  WARNING: set ADMIN_PASSWORD before going live. The default staff password is public.');
     console.log(`  Admin dashboard:        http://localhost:${PORT}/admin  (password: ${process.env.ADMIN_PASSWORD ? '[from ADMIN_PASSWORD]' : ADMIN_PASSWORD})\n`);
   });
 }

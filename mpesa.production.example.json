@@ -1,0 +1,11 @@
+{
+  "env": "production",
+  "consumerKey": "PRODUCTION CONSUMER KEY (Daraja > My Apps, after Go Live)",
+  "consumerSecret": "PRODUCTION CONSUMER SECRET",
+  "shortcode": "YOUR PAYBILL NUMBER (for a Till: the Store number)",
+  "passkey": "PRODUCTION PASSKEY (Safaricom emails it after Go Live)",
+  "type": "paybill",
+  "till": "",
+  "callbackUrl": "https://YOUR-DOMAIN/api/mpesa/callback",
+  "accountName": "THE PETRICHOR"
+}
