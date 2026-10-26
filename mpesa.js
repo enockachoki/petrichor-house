@@ -28,7 +28,14 @@ function loadConfig() {
   cfg.env = cfg.env === 'production' ? 'production' : 'sandbox';
   cfg.type = cfg.type === 'till' ? 'till' : 'paybill';
   cfg.accountName = cfg.accountName || 'THE PETRICHOR';
-  cfg.live = Boolean(cfg.consumerKey && cfg.consumerSecret && cfg.shortcode && cfg.passkey && cfg.callbackUrl);
+  // Safaricom's public sandbox Paybill, so a sandbox app only needs its key and secret.
+  if (cfg.env === 'sandbox') {
+    cfg.shortcode ||= '174379';
+    cfg.passkey ||= 'bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919';
+  }
+  // Without a public address Safaricom can't call us back; the site then asks for the result instead.
+  cfg.callbackUrl ||= 'https://example.com/api/mpesa/callback';
+  cfg.live = Boolean(cfg.consumerKey && cfg.consumerSecret && cfg.shortcode && cfg.passkey);
   return cfg;
 }
 
@@ -105,3 +112,15 @@ function parseCallback(body) {
 }
 
 module.exports = { cfg, normalisePhone, stkPush, stkQuery, parseCallback };
+
+// `node mpesa.js` checks the settings and signs in to Safaricom, without sending any prompt.
+if (require.main === module) {
+  if (!cfg.live) {
+    console.log('\n  Demo mode: no consumerKey/consumerSecret found in mpesa.json.\n');
+  } else {
+    console.log(`\n  ${cfg.env} · shortcode ${cfg.shortcode} · ${cfg.type}`);
+    accessToken()
+      .then(() => console.log('  Signed in to Safaricom. M-Pesa is ready.\n'))
+      .catch((e) => { console.log('  ' + e.message + '\n'); process.exitCode = 1; });
+  }
+}

@@ -1,11 +1,5 @@
 {
   "env": "sandbox",
-  "consumerKey": "from developer.safaricom.co.ke > My Apps",
-  "consumerSecret": "from developer.safaricom.co.ke > My Apps",
-  "shortcode": "your Paybill number, or the Store number of your Till",
-  "passkey": "the Lipa na M-Pesa Online passkey Safaricom emails you",
-  "type": "paybill",
-  "till": "your Till number (only when type is till)",
-  "callbackUrl": "https://your-public-site.example/api/mpesa/callback",
-  "accountName": "THE PETRICHOR"
+  "consumerKey": "PASTE YOUR CONSUMER KEY HERE",
+  "consumerSecret": "PASTE YOUR CONSUMER SECRET HERE"
 }

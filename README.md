@@ -68,4 +68,12 @@ Before taking real guests you would want to add online payment (for example M-Pe
 
 Out of the box payments run in **demo mode**: no money moves and the customer confirms a pretend PIN prompt on screen.
 
-To take real money you need a Safaricom **Paybill or Till** with *Lipa na M-Pesa Online* enabled (an STK push can't pay into a personal number such as 0796 306 263), plus an app on https://developer.safaricom.co.ke. Copy `mpesa.example.json` to `mpesa.json`, fill it in, and restart. `callbackUrl` must be a public https address that reaches `/api/mpesa/callback`; on a PC without one the site asks Safaricom for the result every few seconds instead.
+**Sandbox test (no real money):** create an app at https://developer.safaricom.co.ke with *M-Pesa Sandbox* ticked, then in the project folder run `notepad mpesa.json` and paste:
+
+```json
+{ "env": "sandbox", "consumerKey": "…", "consumerSecret": "…" }
+```
+
+Save, run `node mpesa.js` to check the keys, then `node server.js`. The sandbox Paybill 174379 and its test passkey are filled in for you. Prompts go to the Safaricom number the guest types.
+
+**Going live:** you need a Paybill or Till with *Lipa na M-Pesa Online* (an STK push can't pay into a personal number), the production keys and passkey from Safaricom, and `"env": "production"`, `"shortcode"`, `"passkey"` (plus `"type": "till"` and `"till"` for a Till) in `mpesa.json`. Set `callbackUrl` to a public https address that reaches `/api/mpesa/callback`; without one the site asks Safaricom for each result every few seconds instead.
