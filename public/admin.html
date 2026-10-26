@@ -12,8 +12,62 @@
   <link rel="stylesheet" href="/styles.css" />
   <style>
     body { background: #f1ede4; }
-    .login { min-height: 100vh; display: grid; place-items: center; background: var(--forest); padding: 16px; }
-    .login .panel { width: min(400px, 100%); }
+    /* ---------- login ---------- */
+    .login { position: relative; min-height: 100vh; min-height: 100svh; display: grid; place-items: center; background: #0b0b0b; padding: 16px; overflow: hidden; }
+    .login-bg { position: absolute; inset: -4%; background: linear-gradient(180deg, rgba(10,10,10,.55), rgba(10,10,10,.92)), url('/photos/exterior.jpg') center/cover; animation: drift 24s ease-in-out infinite alternate; filter: saturate(.85); }
+    @keyframes drift { from { transform: scale(1.04) translate(0, 0); } to { transform: scale(1.14) translate(-2%, -1.5%); } }
+    #loginRain { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+    .login-card { position: relative; width: min(400px, 100%); padding: 40px 34px 30px; border-radius: 14px; background: rgba(22,22,22,.58); border: 1px solid rgba(217,168,102,.22); backdrop-filter: blur(16px) saturate(1.2); -webkit-backdrop-filter: blur(16px) saturate(1.2); color: var(--cream); box-shadow: 0 40px 80px -30px rgba(0,0,0,.8); animation: cardIn .9s cubic-bezier(.2,.8,.2,1) both; --brass: #d9a866; }
+    @keyframes cardIn { from { opacity: 0; transform: translateY(40px) scale(.96); filter: blur(6px); } }
+    .login-card::before { content: ''; position: absolute; inset: -1px; border-radius: 14px; padding: 1px; background: conic-gradient(from var(--a, 0deg), transparent 0 70%, #d9a866 80%, transparent 90%); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; animation: orbit 5s linear infinite; pointer-events: none; }
+    @property --a { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+    @keyframes orbit { to { --a: 360deg; } }
+    .login-mark { width: 54px; height: 54px; display: block; margin-bottom: 16px; fill: none; stroke: #d9a866; stroke-width: 2.6; stroke-linecap: round; }
+    .login-mark .d1 { stroke-dasharray: 140; stroke-dashoffset: 140; animation: ink 1.6s .3s ease forwards; }
+    .login-mark .d2 { stroke-dasharray: 60; stroke-dashoffset: 60; animation: ink 1s 1.3s ease forwards; }
+    @keyframes ink { to { stroke-dashoffset: 0; } }
+    .login-card h1 { font-family: var(--serif); font-weight: 400; font-size: 2.5rem; margin: 4px 0 2px; letter-spacing: .02em; }
+    .login-card > * { animation: up .7s cubic-bezier(.2,.8,.2,1) both; }
+    .login-card > :nth-child(2) { animation-delay: .15s; } .login-card > :nth-child(3) { animation-delay: .22s; } .login-card > :nth-child(4) { animation-delay: .29s; }
+    .login-card > :nth-child(5) { animation-delay: .38s; } .login-card > :nth-child(6) { animation-delay: .46s; } .login-card > :nth-child(8) { animation-delay: .54s; }
+    @keyframes up { from { opacity: 0; transform: translateY(14px); } }
+    .login-sub { color: rgba(247,246,242,.6); margin: 0 0 26px; }
+    .float { position: relative; display: block; margin-bottom: 16px; }
+    .float input { width: 100%; padding: 22px 16px 8px; border-radius: 8px; border: 1px solid rgba(247,246,242,.16); background: rgba(255,255,255,.06); color: var(--cream); font: inherit; font-size: 1rem; outline: none; transition: border-color .25s, background .25s, box-shadow .25s; }
+    .float.pw input { padding-right: 52px; }
+    .float input:focus { border-color: #d9a866; background: rgba(255,255,255,.09); box-shadow: 0 0 0 4px rgba(217,168,102,.14); }
+    .float span { position: absolute; left: 16px; top: 16px; font-size: .95rem; color: rgba(247,246,242,.55); pointer-events: none; transition: all .2s ease; }
+    .float input:focus + span, .float input:not(:placeholder-shown) + span { top: 7px; font-size: .62rem; letter-spacing: .18em; text-transform: uppercase; color: #d9a866; }
+    .float input:-webkit-autofill { -webkit-text-fill-color: var(--cream); -webkit-box-shadow: 0 0 0 40px #1d1d1d inset; caret-color: var(--cream); }
+    .peek { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); width: 38px; height: 38px; border-radius: 50%; border: 0; background: transparent; cursor: pointer; display: grid; place-items: center; transition: background .2s; }
+    .peek:hover { background: rgba(255,255,255,.08); }
+    .peek svg { width: 22px; height: 22px; fill: none; stroke: rgba(247,246,242,.7); stroke-width: 1.7; stroke-linecap: round; }
+    .peek .slash { stroke-dasharray: 23; stroke-dashoffset: 0; transition: stroke-dashoffset .3s ease; }
+    .peek .pupil { transition: transform .3s ease; transform-origin: 12px 12px; }
+    .peek.on svg { stroke: #d9a866; }
+    .peek.on .slash { stroke-dashoffset: 23; }
+    .peek.on .pupil { animation: look 3s ease-in-out; }
+    @keyframes look { 15% { transform: translateX(-2px); } 45% { transform: translateX(2px); } 75% { transform: translateX(0) scale(1.15); } }
+    .peek-bar { position: absolute; left: 8px; right: 8px; bottom: 0; height: 2px; border-radius: 2px; background: #d9a866; transform: scaleX(0); transform-origin: left; }
+    .peek-bar.run { animation: drain 3s linear forwards; }
+    @keyframes drain { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+    .caps { margin: -8px 0 12px; font-size: .8rem; color: #e8c08a; }
+    .login-go { width: 100%; margin-top: 8px; padding: 15px; position: relative; overflow: hidden; }
+    .login-go::after { content: ''; position: absolute; top: 0; bottom: 0; width: 40%; left: -60%; background: linear-gradient(90deg, transparent, rgba(255,255,255,.45), transparent); transform: skewX(-20deg); animation: sheen 3.6s 1.8s ease-in-out infinite; }
+    @keyframes sheen { 0% { left: -60%; } 40%, 100% { left: 130%; } }
+    .login-go .spinner { display: none; width: 18px; height: 18px; border: 2px solid rgba(18,18,18,.3); border-top-color: #121212; border-radius: 50%; animation: spin .7s linear infinite; margin: 0 auto; }
+    .login-go.busy span { display: none; } .login-go.busy .spinner { display: block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .login-card.shake { animation: shakeX .5s; }
+    @keyframes shakeX { 20%, 60% { transform: translateX(-10px); } 40%, 80% { transform: translateX(10px); } }
+    .login-card.out { animation: away .6s cubic-bezier(.6,0,.4,1) forwards; }
+    @keyframes away { to { opacity: 0; transform: translateY(-30px) scale(.94); filter: blur(4px); } }
+    .login-card .error { color: #f0a59b; min-height: 1.2em; margin-top: 12px; font-size: .9rem; }
+    .login-foot { margin: 14px 0 0; font-size: .85rem; } .login-foot a { color: rgba(247,246,242,.6); }
+    .shell.enter { animation: fadeIn .6s ease; } @keyframes fadeIn { from { opacity: 0; } }
+    .who { margin: -14px 0 18px; padding: 0 14px; font-size: .8rem; color: rgba(244,239,228,.6); }
+    .who b { color: var(--brass-2); font-weight: 400; }
+    @media (prefers-reduced-motion: reduce) { .login *, .login-bg, .login-card::before { animation: none !important; } .login-mark path { stroke-dashoffset: 0; } }
     .shell { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
     aside { background: var(--forest); color: var(--cream); padding: 28px 18px; position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; gap: 4px; }
     aside .brand { margin-bottom: 28px; font-size: 1.3rem; display: block; line-height: 1.3; }
@@ -70,19 +124,36 @@
 </head>
 <body>
   <div class="login" id="login">
-    <form class="panel" id="loginForm">
+    <div class="login-bg" aria-hidden="true"></div>
+    <canvas id="loginRain" aria-hidden="true"></canvas>
+    <form class="login-card" id="loginForm" autocomplete="on">
+      <svg class="login-mark" viewBox="0 0 64 64" aria-hidden="true"><path class="d1" d="M32 6c9 14 16 23 16 33a16 16 0 0 1-32 0c0-10 7-19 16-33z"/><path class="d2" d="M32 26v28M32 38l-8-7M32 44l8-7"/></svg>
       <p class="eyebrow">Staff only</p>
-      <h4 style="font-size:2rem;margin:8px 0 20px">The Petrichor dashboard</h4>
-      <label class="field">Password<input type="password" name="password" required autofocus /></label>
-      <button class="btn" style="width:100%;margin-top:18px">Sign in</button>
-      <div class="error" id="loginError"></div>
-      <p style="margin-top:18px;font-size:.85rem"><a href="/">← Back to the website</a></p>
+      <h1>The Petrichor</h1>
+      <p class="login-sub">Sign in to the dashboard</p>
+      <label class="float">
+        <input name="username" required autocomplete="username" autocapitalize="none" spellcheck="false" placeholder=" " />
+        <span>Username</span>
+      </label>
+      <label class="float pw">
+        <input name="password" type="password" required autocomplete="current-password" placeholder=" " id="pwInput" />
+        <span>Password</span>
+        <button type="button" class="peek" id="peek" aria-label="Show password for 3 seconds" title="Show for 3 seconds">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path class="eye" d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle class="pupil" cx="12" cy="12" r="3"/><path class="slash" d="M4 4l16 16"/></svg>
+        </button>
+        <i class="peek-bar" id="peekBar"></i>
+      </label>
+      <p class="caps" id="caps" hidden>Caps Lock is on</p>
+      <button class="btn login-go" id="loginGo"><span>Sign in</span><i class="spinner"></i></button>
+      <div class="error" id="loginError" role="alert"></div>
+      <p class="login-foot"><a href="/">← Back to the website</a></p>
     </form>
   </div>
 
   <div class="shell" id="shell" style="display:none">
     <aside>
       <div class="brand">THE PETRICHOR<small>Staff dashboard</small></div>
+      <p class="who" id="who"></p>
       <button class="navi" data-view="overview">Overview</button>
       <button class="navi" data-view="calendar">Room availability</button>
       <button class="navi" data-view="bookings">Room bookings</button>
@@ -95,6 +166,7 @@
       <button class="navi" data-view="payments">M-Pesa payments</button>
       <button class="navi" data-view="menu">Menu &amp; prices</button>
       <button class="navi" data-view="delivery">Delivery settings</button>
+      <button class="navi" data-view="accounts" id="navAccounts" hidden>Staff accounts</button>
       <div class="spacer"></div>
       <a class="navi" href="/" style="color:rgba(244,239,228,.6);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;padding:11px 14px;text-decoration:none">View website</a>
       <button class="navi" id="logout">Sign out</button>

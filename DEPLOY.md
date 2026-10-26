@@ -35,7 +35,7 @@ Restart the server. The start-up line reads `M-Pesa payments: LIVE (shortcode â€
 Safaricom's callback needs a public **https** address. Any Node 18+ host works (a small VPS with Nginx + Let's Encrypt, Render, Railway, etc.):
 
 - Start command: `node server.js`. The port comes from `PORT`.
-- Set `ADMIN_PASSWORD` to a strong password (the server warns if you forget, in production).
+- Sign in as `admin` and change the default password under **Staff accounts** (the server warns in production if you forget). Give each staff member their own account.
 - Keep the `data/` folder on persistent storage and back it up: it holds every booking, order and payment.
 - `mpesa.json` holds secrets: never commit it (it is in `.gitignore`). On hosts with no files, use environment variables instead: `MPESA_ENV`, `MPESA_CONSUMER_KEY`, `MPESA_CONSUMER_SECRET`, `MPESA_SHORTCODE`, `MPESA_PASSKEY`, `MPESA_TYPE`, `MPESA_TILL`, `MPESA_CALLBACK_URL`, `MPESA_ACCOUNT_NAME`.
 

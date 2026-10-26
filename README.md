@@ -27,7 +27,7 @@ You need [Node.js](https://nodejs.org) 18 or newer. There is nothing to install.
 npm start
 ```
 
-Then open http://localhost:3000. The staff dashboard is at http://localhost:3000/admin, password `petrichor-admin`.
+Then open http://localhost:3000. The staff dashboard is at http://localhost:3000/admin, username `admin`, password `petrichor-admin`.
 
 | Command | What it does |
 | --- | --- |
@@ -77,3 +77,11 @@ Out of the box payments run in **demo mode**: no money moves and the customer co
 Save, run `node mpesa.js` to check the keys, then `node server.js`. The sandbox Paybill 174379 and its test passkey are filled in for you. Prompts go to the Safaricom number the guest types.
 
 **Going live:** see [DEPLOY.md](DEPLOY.md). It only takes swapping `mpesa.json` for the production version.
+
+
+## Staff accounts
+
+- Sign in at `/admin`. A fresh install has one **super admin**: username `admin`, password `petrichor-admin` (or `ADMIN_PASSWORD` if set the first time). Change it under **Staff accounts**.
+- Super admins create staff accounts, reset their passwords, disable or delete them. Staff use the rest of the dashboard but can't see accounts or change passwords.
+- Passwords are stored as salted scrypt hashes. Five wrong tries from one device locks sign-in for 10 minutes.
+- Lost the super admin password? Stop the site and run `node reset-admin.js NewPassword123`.

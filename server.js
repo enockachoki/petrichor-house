@@ -7,9 +7,9 @@ const path = require('path');
 const crypto = require('crypto');
 const seed = require('./seed');
 const mpesa = require('./mpesa');
+const auth = require('./auth');
 
 const PORT = Number(process.env.PORT) || 3000;
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'petrichor-admin';
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
 const DB_FILE = path.join(DATA_DIR, 'db.json');
 const PUBLIC_DIR = path.join(__dirname, 'public');
@@ -444,16 +444,85 @@ function createEnquiry(body) {
 
 // ---------- admin ----------
 
-const sessions = new Map(); // token -> expiry
-function isAdmin(req) {
+// Staff accounts: one or more super admins (the owner) who manage accounts and passwords, and staff who run the day.
+const sessions = new Map(); // token -> { userId, expires }
+function currentUser(req) {
   const token = (req.headers.authorization || '').replace(/^Bearer /, '');
-  const exp = sessions.get(token);
-  if (!exp) return false;
-  if (exp < Date.now()) {
+  const s = sessions.get(token);
+  if (!s) return null;
+  const user = db.users.find((u) => u.id === s.userId && u.active);
+  if (!user || s.expires < Date.now()) {
     sessions.delete(token);
-    return false;
+    return null;
   }
-  return true;
+  return user;
+}
+const signOutUser = (userId) => { for (const [t, s] of sessions) if (s.userId === userId) sessions.delete(t); };
+const publicUser = (u) => ({ id: u.id, username: u.username, name: u.name, role: u.role, active: u.active, createdAt: u.createdAt, lastLogin: u.lastLogin });
+
+// Slows down password guessing: 5 wrong tries from one address locks it out for 10 minutes.
+const failures = new Map(); // ip -> { count, until }
+function loginGuard(ip) {
+  const f = failures.get(ip);
+  if (f && f.until > Date.now()) throw new HttpError(429, `Too many wrong passwords. Try again in ${Math.ceil((f.until - Date.now()) / 60000)} minutes.`);
+}
+function loginFailed(ip) {
+  const f = failures.get(ip) || { count: 0, until: 0 };
+  f.count += 1;
+  if (f.count >= 5) Object.assign(f, { count: 0, until: Date.now() + 10 * 60000 });
+  failures.set(ip, f);
+}
+
+const USERNAME_RE = /^[a-z0-9._-]{3,30}$/;
+async function manageUsers(method, recId, req, me) {
+  if (me.role !== 'super') throw new HttpError(403, 'Only the super admin can manage accounts');
+  if (method === 'GET') return db.users.map(publicUser);
+  if (method === 'POST') {
+    const body = await readBody(req);
+    const username = clean(body.username, 30).toLowerCase();
+    if (!USERNAME_RE.test(username)) throw bad('Usernames are 3 to 30 letters, numbers, dots or dashes');
+    if (db.users.some((u) => u.username === username)) throw new HttpError(409, 'That username is taken');
+    const weak = auth.checkStrength(body.password);
+    if (weak) throw bad(weak);
+    const user = { id: id('u'), username, name: clean(body.name, 60) || username, role: body.role === 'super' ? 'super' : 'staff', active: true, ...auth.hashPassword(body.password), createdAt: new Date().toISOString() };
+    db.users.push(user);
+    save();
+    return publicUser(user);
+  }
+  const user = db.users.find((u) => u.id === recId);
+  if (!user) throw new HttpError(404, 'Account not found');
+  const supers = () => db.users.filter((u) => u.role === 'super' && u.active);
+  if (method === 'PATCH') {
+    const body = await readBody(req);
+    if (body.password !== undefined) {
+      if (user.id === me.id && !auth.verifyPassword(body.currentPassword, me)) throw bad('Your current password is not right');
+      const weak = auth.checkStrength(body.password);
+      if (weak) throw bad(weak);
+      Object.assign(user, auth.hashPassword(body.password));
+      if (user.id !== me.id) signOutUser(user.id);
+    }
+    if (body.name !== undefined) user.name = clean(body.name, 60) || user.username;
+    if (body.role !== undefined || body.active !== undefined) {
+      const role = body.role === undefined ? user.role : body.role === 'super' ? 'super' : 'staff';
+      const active = body.active === undefined ? user.active : body.active === true || body.active === 'true';
+      if (user.id === me.id && (role !== 'super' || !active)) throw bad('You cannot remove your own super admin access');
+      if (user.role === 'super' && (role !== 'super' || !active) && supers().length <= 1) throw bad('Keep at least one active super admin');
+      Object.assign(user, { role, active });
+      if (!active) signOutUser(user.id);
+    }
+    user.updatedAt = new Date().toISOString();
+    save();
+    return publicUser(user);
+  }
+  if (method === 'DELETE') {
+    if (user.id === me.id) throw bad('You cannot delete your own account');
+    if (user.role === 'super' && supers().length <= 1) throw bad('Keep at least one active super admin');
+    db.users.splice(db.users.indexOf(user), 1);
+    signOutUser(user.id);
+    save();
+    return { ok: true };
+  }
+  throw new HttpError(404, 'Not found');
 }
 
 function overview() {
@@ -687,16 +756,26 @@ async function api(req, res, url) {
 
   // ----- admin -----
   if (method === 'POST' && p === '/api/admin/login') {
-    const { password } = await readBody(req);
-    const a = Buffer.from(String(password || ''));
-    const b = Buffer.from(ADMIN_PASSWORD);
-    if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) throw new HttpError(401, 'Wrong password');
+    const ip = req.socket.remoteAddress;
+    loginGuard(ip);
+    const { username, password } = await readBody(req);
+    const user = db.users.find((u) => u.username === clean(username, 30).toLowerCase() && u.active);
+    if (!auth.verifyPassword(password, user)) {
+      loginFailed(ip);
+      throw new HttpError(401, 'Wrong username or password');
+    }
+    failures.delete(ip);
+    user.lastLogin = new Date().toISOString();
+    save();
     const token = crypto.randomBytes(24).toString('hex');
-    sessions.set(token, Date.now() + 12 * 3600 * 1000);
-    return send(res, 200, { token });
+    sessions.set(token, { userId: user.id, expires: Date.now() + 12 * 3600 * 1000 });
+    return send(res, 200, { token, user: publicUser(user) });
   }
   if (parts[1] !== 'admin') throw new HttpError(404, 'Not found');
-  if (!isAdmin(req)) throw new HttpError(401, 'Please sign in');
+  const me = currentUser(req);
+  if (!me) throw new HttpError(401, 'Please sign in');
+  if (method === 'GET' && parts[2] === 'me') return send(res, 200, { ...publicUser(me), defaultPassword: me.username === 'admin' && auth.verifyPassword('petrichor-admin', me) });
+  if (parts[2] === 'users') return send(res, method === 'POST' ? 201 : 200, await manageUsers(method, parts[3], req, me));
 
   const resource = parts[2];
   const recId = parts[3];
@@ -813,8 +892,10 @@ if (require.main === module) {
     console.log(`\n  The Petrichor is open at http://localhost:${PORT}`);
     const pm = mpesa.cfg;
     console.log(`  M-Pesa payments:        ${pm.mode === 'live' ? `${pm.env === 'production' ? 'LIVE' : 'sandbox'} (shortcode ${pm.shortcode})` : pm.mode === 'off' ? 'OFF: env is production but mpesa.json is missing keys' : 'demo mode (no real money; see mpesa.example.json)'}`);
-    if (pm.env === 'production' && !process.env.ADMIN_PASSWORD) console.warn('  WARNING: set ADMIN_PASSWORD before going live. The default staff password is public.');
-    console.log(`  Admin dashboard:        http://localhost:${PORT}/admin  (password: ${process.env.ADMIN_PASSWORD ? '[from ADMIN_PASSWORD]' : ADMIN_PASSWORD})\n`);
+    const owner = db.users.find((u) => u.username === 'admin');
+    const isDefault = owner && auth.verifyPassword('petrichor-admin', owner);
+    console.log(`  Admin dashboard:        http://localhost:${PORT}/admin  (${isDefault ? 'username admin, password petrichor-admin: change it after signing in' : 'sign in with your staff account'})\n`);
+    if (isDefault && pm.env === 'production') console.warn('  WARNING: the super admin still has the default password. Change it before going live.');
   });
 }
 

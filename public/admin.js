@@ -33,32 +33,108 @@
   }
   const attempt = async (fn, ok) => { try { await fn(); if (ok) toast(ok); } catch (e) { toast(e.message); } };
 
+  let me = null;
   function signOut() {
     token = null;
+    me = null;
     try { sessionStorage.removeItem('ph-token'); } catch {}
     $('#shell').style.display = 'none';
     $('#login').style.display = 'grid';
+    $('#loginForm').classList.remove('out');
+    $('#loginGo').classList.remove('busy');
+    loginRain();
   }
+
+  // ---------- login ----------
+  function loginRain() {
+    const c = $('#loginRain');
+    if (!c || c.dataset.on || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    c.dataset.on = '1';
+    const ctx = c.getContext('2d');
+    let drops = [], w, h;
+    const resize = () => {
+      w = c.width = c.offsetWidth * devicePixelRatio;
+      h = c.height = c.offsetHeight * devicePixelRatio;
+      drops = Array.from({ length: Math.round((w * h) / 7000) }, () => ({ x: Math.random() * w, y: Math.random() * h, l: 10 + Math.random() * 24, v: 7 + Math.random() * 11, o: 0.06 + Math.random() * 0.22 }));
+    };
+    resize();
+    addEventListener('resize', resize);
+    (function frame() {
+      if ($('#login').style.display === 'none') { delete c.dataset.on; return; }
+      ctx.clearRect(0, 0, w, h);
+      ctx.lineWidth = devicePixelRatio;
+      for (const d of drops) {
+        ctx.strokeStyle = `rgba(232,192,138,${d.o})`;
+        ctx.beginPath();
+        ctx.moveTo(d.x, d.y);
+        ctx.lineTo(d.x - d.l * 0.12, d.y + d.l);
+        ctx.stroke();
+        d.y += d.v;
+        d.x -= d.v * 0.12;
+        if (d.y > h) { d.y = -d.l; d.x = Math.random() * w * 1.1; }
+      }
+      requestAnimationFrame(frame);
+    })();
+  }
+
+  // The eye shows the password for three seconds, then hides it again.
+  let peekTimer;
+  $('#peek').onclick = () => {
+    const input = $('#pwInput');
+    const btn = $('#peek');
+    const bar = $('#peekBar');
+    clearTimeout(peekTimer);
+    const hide = () => { input.type = 'password'; btn.classList.remove('on'); bar.classList.remove('run'); };
+    if (btn.classList.contains('on')) return hide();
+    input.type = 'text';
+    btn.classList.add('on');
+    bar.classList.remove('run');
+    void bar.offsetWidth;
+    bar.classList.add('run');
+    peekTimer = setTimeout(hide, 3000);
+    input.focus();
+  };
+  $('#pwInput').addEventListener('keyup', (e) => ($('#caps').hidden = !e.getModifierState?.('CapsLock')));
 
   $('#loginForm').onsubmit = async (e) => {
     e.preventDefault();
+    const card = e.target;
+    const go = $('#loginGo');
+    $('#loginError').textContent = '';
+    go.classList.add('busy');
     try {
-      const r = await api('/login', { method: 'POST', body: { password: e.target.password.value } });
+      const r = await api('/login', { method: 'POST', body: { username: card.username.value, password: card.password.value } });
       token = r.token;
       try { sessionStorage.setItem('ph-token', token); } catch {}
-      start();
+      card.password.value = '';
+      card.classList.add('out');
+      setTimeout(start, 550);
     } catch (err) {
+      go.classList.remove('busy');
       $('#loginError').textContent = err.message;
+      card.classList.remove('shake');
+      void card.offsetWidth;
+      card.classList.add('shake');
     }
   };
   $('#logout').onclick = signOut;
 
   let current = 'overview';
-  function start() {
+  async function start() {
+    try {
+      me = await api('/me');
+    } catch {
+      return;
+    }
     $('#login').style.display = 'none';
     $('#shell').style.display = 'grid';
+    $('#shell').classList.add('enter');
+    $('#who').innerHTML = `Signed in as <b>${esc(me.name)}</b> · ${me.role === 'super' ? 'super admin' : 'staff'}`;
+    $('#navAccounts').hidden = me.role !== 'super';
+    if (current === 'accounts' && me.role !== 'super') current = 'overview';
     $$('aside [data-view]').forEach((b) => (b.onclick = () => show(b.dataset.view)));
     show(current);
+    if (me.defaultPassword) toast('You are still using the default password. Change it under Staff accounts.');
   }
   async function show(view) {
     current = view;
@@ -78,6 +154,41 @@
   }
 
   const VIEWS = {
+    async accounts(el) {
+      const users = await api('/users');
+      el.innerHTML = `
+        <h1>Staff accounts</h1><p class="sub">Only super admins can see this page, create accounts and change passwords. Staff can use everything else in the dashboard.</p>
+        ${me.defaultPassword ? '<p class="banner">Your account still has the default password <b>petrichor-admin</b>. Change it below before the site goes live.</p>' : ''}
+        <div class="card"><h3>Accounts</h3><table class="data"><tr><th>Name</th><th>Username</th><th>Role</th><th>Last sign-in</th><th>Status</th><th>New password</th><th></th></tr>
+          ${users.map((u) => `<tr data-user="${u.id}">
+            <td><input data-f="name" value="${esc(u.name)}" /></td>
+            <td><b>${esc(u.username)}</b>${u.id === me.id ? ' <small>(you)</small>' : ''}</td>
+            <td><select data-f="role" ${u.id === me.id ? 'disabled' : ''}><option value="staff" ${u.role === 'staff' ? 'selected' : ''}>staff</option><option value="super" ${u.role === 'super' ? 'selected' : ''}>super admin</option></select></td>
+            <td><small>${u.lastLogin ? new Date(u.lastLogin).toLocaleString('en-GB', { timeZone: 'Africa/Nairobi', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'never'}</small></td>
+            <td>${u.id === me.id ? pill('active') : `<select data-f="active"><option value="true" ${u.active ? 'selected' : ''}>active</option><option value="false" ${u.active ? '' : 'selected'}>disabled</option></select>`}</td>
+            <td>${u.id === me.id ? '<small>Change yours below</small>' : '<input data-f="password" type="password" placeholder="Leave blank to keep" autocomplete="new-password" />'}</td>
+            <td class="row-actions"><button class="mini primary" data-save-user>Save</button>${u.id === me.id ? '' : '<button class="mini danger" data-del-user>Delete</button>'}</td></tr>`).join('')}
+        </table>
+        <form class="addform" id="addUser" autocomplete="off"><label class="field">Full name<input name="name" required /></label><label class="field">Username<input name="username" required autocapitalize="none" placeholder="e.g. mary" /></label><label class="field">Password<input name="password" type="password" required autocomplete="new-password" placeholder="8+ letters and numbers" /></label><label class="field">Role<select name="role"><option value="staff">staff</option><option value="super">super admin</option></select></label><button class="btn small">Create account</button></form></div>
+        <div class="card"><h3>My password</h3>
+          <form class="addform" id="myPw" style="border:0;margin:0;padding:0" autocomplete="off"><label class="field">Current password<input name="currentPassword" type="password" required autocomplete="current-password" /></label><label class="field">New password<input name="password" type="password" required autocomplete="new-password" /></label><label class="field">Repeat new password<input name="repeat" type="password" required autocomplete="new-password" /></label><button class="btn small">Change my password</button></form>
+          <p class="sub" style="margin:14px 0 0">Locked out? On the computer running the site, stop it and run <code>node reset-admin.js NewPassword123</code>.</p></div>`;
+      $$('[data-save-user]', el).forEach((b) => (b.onclick = () => {
+        const tr = b.closest('tr');
+        const body = {};
+        $$('[data-f]', tr).forEach((i) => { if (!i.disabled && !(i.dataset.f === 'password' && !i.value)) body[i.dataset.f] = i.dataset.f === 'active' ? i.value === 'true' : i.value; });
+        attempt(async () => { await api(`/users/${tr.dataset.user}`, { method: 'PATCH', body }); refresh(); }, body.password ? 'Saved. They have been signed out and must use the new password.' : 'Account saved');
+      }));
+      $$('[data-del-user]', el).forEach((b) => (b.onclick = () => confirm('Delete this account? They will be signed out straight away.') && attempt(async () => { await api(`/users/${b.closest('tr').dataset.user}`, { method: 'DELETE' }); refresh(); }, 'Account deleted')));
+      $('#addUser').onsubmit = (e) => { e.preventDefault(); attempt(async () => { await api('/users', { method: 'POST', body: Object.fromEntries(new FormData(e.target)) }); refresh(); }, 'Account created'); };
+      $('#myPw').onsubmit = (e) => {
+        e.preventDefault();
+        const f = Object.fromEntries(new FormData(e.target));
+        if (f.password !== f.repeat) return toast('The two new passwords are different');
+        attempt(async () => { await api(`/users/${me.id}`, { method: 'PATCH', body: { currentPassword: f.currentPassword, password: f.password } }); me = await api('/me'); refresh(); }, 'Your password is changed');
+      };
+    },
+
     async payments(el) {
       const list = await api('/payments');
       const f = VIEWS.payments.filter || 'all';
@@ -301,4 +412,5 @@
   };
 
   if (token) start();
+  else loginRain();
 })();

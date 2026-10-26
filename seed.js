@@ -122,8 +122,11 @@ const diningConfig = {
   seatingMinutes: 90,
 };
 
+const { superAdmin } = require('./auth');
+
 module.exports = function seed() {
   return {
+    users: [superAdmin()],
     roomTypes,
     rooms,
     bookings: [],
