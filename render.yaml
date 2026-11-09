@@ -1,0 +1,18 @@
+# One-click hosting on Render (https://render.com). Open
+#   https://render.com/deploy?repo=https://github.com/enockachoki/petrichor-house
+# sign in with GitHub, type an admin password when asked, and press Apply.
+services:
+  - type: web
+    name: the-petrichor
+    runtime: node
+    plan: free
+    region: frankfurt
+    buildCommand: echo "No packages to install"
+    startCommand: node server.js
+    healthCheckPath: /
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: ADMIN_PASSWORD
+        sync: false
