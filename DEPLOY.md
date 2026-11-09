@@ -39,6 +39,16 @@ Safaricom's callback needs a public **https** address. Any Node 18+ host works (
 - Keep the `data/` folder on persistent storage and back it up: it holds every booking, order and payment.
 - `mpesa.json` holds secrets: never commit it (it is in `.gitignore`). On hosts with no files, use environment variables instead: `MPESA_ENV`, `MPESA_CONSUMER_KEY`, `MPESA_CONSUMER_SECRET`, `MPESA_SHORTCODE`, `MPESA_PASSKEY`, `MPESA_TYPE`, `MPESA_TILL`, `MPESA_CALLBACK_URL`, `MPESA_ACCOUNT_NAME`.
 
+## Free hosting on Render (quickest public link)
+
+`render.yaml` sets everything up. Open https://render.com/deploy?repo=https://github.com/enockachoki/petrichor-house , sign in with GitHub, type a password for `ADMIN_PASSWORD` (this is the `admin` login), and press **Apply**. After two or three minutes the site is live at an address like `https://the-petrichor.onrender.com`.
+
+Things to know about the free plan:
+
+- The site sleeps after 15 minutes with no visitors. The next visitor waits about 30 to 60 seconds while it wakes.
+- The free plan has no permanent storage. Bookings, orders, staff accounts and admin edits are wiped whenever the site restarts or you push an update, and the site comes back with the starting data. The admin password always comes back as the one you typed in Render.
+- To keep data for real guests, switch the service to the Starter plan in Render, add a **Disk** mounted at `/var/data`, and add the environment variable `DATA_DIR` = `/var/data`.
+
 ## What protects the money
 
 - Demo (pretend) payments only exist when no keys are set **and** `env` is not `production`. A production setup with missing keys switches online payment off instead.
